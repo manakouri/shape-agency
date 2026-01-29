@@ -18,14 +18,14 @@ const db = getFirestore(app);
 // --- MISSION REGISTRY ---
 // This defines what data and vocabulary each mission uses.
 const missionRegistry = {
-    "1": {
-        title: "Mission 01: Vertex Scan",
-        prompt: "The vertex is...",
-        options: ["Sharp (Acute)", "Square (Right)", "Wide (Obtuse)", "Straight"],
-        fields: [
-            { id: "vertex_count", label: "Number of Vertices", type: "number" }
-        ]
-    },
+   "1": {
+    title: "Mission 01: Vertex Scan",
+    prompt: "Based on the vertex count, the polygon is a...",
+    options: ["Triangle (3)", "Quadrilateral (4)", "Pentagon (5)", "Hexagon (6)", "Heptagon (7)", "Octagon (8)"],
+    fields: [
+        { id: "vertex_count", label: "Number of Vertices Detected", type: "number" }
+    ]
+},
     "5": {
         title: "Mission 05: Parallel Detect",
         prompt: "The lines are...",
