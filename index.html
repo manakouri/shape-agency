@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SIA | Intelligence Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --sia-neon: #00ff95;
+            --sia-blue: #0088ff;
+            --sia-bg: #0a0e14;
+            --sia-card: #161b22;
+        }
+
+        body {
+            background-color: var(--sia-bg);
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            overflow: hidden; /* Prevents bounce scrolling on tablets */
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            border-bottom: 2px solid var(--sia-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .screen { display: none; padding: 20px; flex: 1; overflow-y: auto; }
+        .active { display: flex; flex-direction: column; }
+
+        /* Agency UI Elements */
+        .sia-btn {
+            background: transparent;
+            border: 2px solid var(--sia-neon);
+            color: var(--sia-neon);
+            padding: 15px 25px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .sia-input {
+            background: #000;
+            border: 1px solid var(--sia-blue);
+            color: white;
+            padding: 15px;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .agent-pill {
+            background: var(--sia-blue);
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div><i class="fas fa-user-secret"></i> SIA PORTAL</div>
+    <div id="mission-status-label">OFFLINE</div>
+</header>
+
+<main id="app-container">
+    <section id="login-screen" class="screen active">
+        <h2>AGENT LOGIN</h2>
+        <p>Enter 4-digit PINs for all agents in your group.</p>
+        <div id="active-agents-list"></div>
+        <input type="number" id="pin-input" class="sia-input" placeholder="Enter PIN" pattern="\d*">
+        <button class="sia-btn" onclick="addAgent()">Add Agent</button>
+        <button class="sia-btn" style="border-color:var(--sia-blue); color:var(--sia-blue);" onclick="proceedToMissions()">Start Operation</button>
+    </section>
+
+    <section id="mission-screen" class="screen">
+        <h2>AVAILABLE MISSIONS</h2>
+        <div id="mission-list">
+            </div>
+    </section>
+
+    <section id="terminal-screen" class="screen">
+        <h2 id="current-mission-title">MISSION DATA</h2>
+        <div id="attribute-inputs">
+            </div>
+        
+        <div id="reasoning-section" style="margin-top: 20px;">
+            <h3>INTELLIGENCE REPORT</h3>
+            <label>BECAUSE...</label>
+            <textarea id="box-because" class="sia-input" style="width:100%; height:80px;"></textarea>
+            
+            <label>BUT...</label>
+            <textarea id="box-but" class="sia-input" style="width:100%; height:80px;"></textarea>
+            
+            <label>SO...</label>
+            <textarea id="box-so" class="sia-input" style="width:100%; height:80px;"></textarea>
+        </div>
+
+        <button class="sia-btn" onclick="submitMission()">Submit Intelligence</button>
+    </section>
+</main>
+
+<script type="module" src="index.js"></script>
+
+</body>
+</html>
