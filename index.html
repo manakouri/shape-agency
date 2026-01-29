@@ -78,38 +78,43 @@
 
 <main id="app-container">
     <section id="login-screen" class="screen active">
-        <h2>AGENT LOGIN</h2>
-        <p>Enter 4-digit PINs for all agents in your group.</p>
-        <div id="active-agents-list"></div>
-        <input type="number" id="pin-input" class="sia-input" placeholder="Enter PIN" pattern="\d*">
+        <h2 style="color: var(--sia-neon);">AGENT LOGIN</h2>
+        <p>Enter 4-digit PINs for your group.</p>
+        <div id="active-agents-list" style="margin-bottom:10px;"></div>
+        <input type="number" id="pin-input" class="sia-input" placeholder="0000">
         <button class="sia-btn" onclick="addAgent()">Add Agent</button>
         <button class="sia-btn" style="border-color:var(--sia-blue); color:var(--sia-blue);" onclick="proceedToMissions()">Start Operation</button>
     </section>
 
     <section id="mission-screen" class="screen">
         <h2>AVAILABLE MISSIONS</h2>
-        <div id="mission-list">
-            </div>
+        <div id="mission-list"></div>
     </section>
 
     <section id="terminal-screen" class="screen">
-        <h2 id="current-mission-title">MISSION DATA</h2>
-        <div id="attribute-inputs">
+        <h2 id="current-mission-title">DATA LOG</h2>
+        
+        <div id="attribute-inputs" class="sia-card" style="background: var(--sia-card); padding: 15px; border-radius: 8px;">
             </div>
         
         <div id="reasoning-section" style="margin-top: 20px;">
             <h3>INTELLIGENCE REPORT</h3>
+            
+            <p id="prompt-conclusion" style="margin-bottom:5px; color: var(--sia-blue); font-weight:bold;"></p>
+            <select id="box-conclusion" class="sia-input" style="width:100%"></select>
+
             <label>BECAUSE...</label>
-            <textarea id="box-because" class="sia-input" style="width:100%; height:80px;"></textarea>
+            <textarea id="box-because" class="sia-input" style="width:100%; height:60px;" placeholder="Evidence..."></textarea>
             
             <label>BUT...</label>
-            <textarea id="box-but" class="sia-input" style="width:100%; height:80px;"></textarea>
+            <textarea id="box-but" class="sia-input" style="width:100%; height:60px;" placeholder="Conflict..."></textarea>
             
             <label>SO...</label>
-            <textarea id="box-so" class="sia-input" style="width:100%; height:80px;"></textarea>
+            <textarea id="box-so" class="sia-input" style="width:100%; height:60px;" placeholder="Final Verdict..."></textarea>
         </div>
 
-        <button class="sia-btn" onclick="submitMission()">Submit Intelligence</button>
+        <button id="submit-btn" class="sia-btn" style="width:100%; margin-top:20px;" onclick="submitMission()">FILE REPORT TO COMMAND</button>
+        <button class="sia-btn" style="border:none; color:gray;" onclick="showScreen('mission-screen')">CANCEL MISSION</button>
     </section>
 </main>
 
