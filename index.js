@@ -120,6 +120,39 @@ function launchMission(id) {
     showScreen('terminal-screen');
 }
 
+window.requestTeacherAccess = () => {
+    const code = prompt("ENTER COMMAND CLEARANCE CODE:");
+    if (code === "SIA2026") { // You can change this code
+        showScreen('teacher-screen');
+        loadTeacherDashboard();
+    }
+};
+
+async function loadTeacherDashboard() {
+    const container = document.getElementById('teacher-feed');
+    container.innerHTML = "Fetching intelligence reports...";
+    
+    const querySnapshot = await getDocs(collection(db, "submissions"));
+    container.innerHTML = '';
+    
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const entry = document.createElement('div');
+        entry.className = 'sia-card';
+        entry.style.border = "1px solid var(--sia-blue)";
+        entry.style.margin = "10px 0";
+        entry.style.padding = "10px";
+        
+        entry.innerHTML = `
+            <strong>Mission ${data.missionId}</strong> | Agents: ${data.agents.join(', ')}<br>
+            <small>${data.timestamp.toDate().toLocaleString()}</small><hr>
+            <b>So:</b> ${data.conclusion}<br>
+            <b>Reasoning:</b> ${data.because}... but ${data.but}... so ${data.so}
+        `;
+        container.appendChild(entry);
+    });
+}
+
 window.submitMission = async () => {
     const btn = document.getElementById('submit-btn');
     btn.innerText = "UPLOADING...";
@@ -163,3 +196,4 @@ window.showScreen = (id) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
 };
+
