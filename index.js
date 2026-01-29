@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 // --- FIREBASE SETUP ---
 const firebaseConfig = {
@@ -15,17 +15,24 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- MISSION REGISTRY ---
-// This defines what data and vocabulary each mission uses.
+// --- MISSION REGISTRY (Successive Steps) ---
 const missionRegistry = {
-   "1": {
-    title: "Mission 01: Vertex Scan",
-    prompt: "Based on the vertex count, the polygon is a...",
-    options: ["Triangle (3)", "Quadrilateral (4)", "Pentagon (5)", "Hexagon (6)", "Heptagon (7)", "Octagon (8)"],
-    fields: [
-        { id: "vertex_count", label: "Number of Vertices Detected", type: "number" }
-    ]
-},
+    "1": {
+        title: "Mission 01: Vertex Scan",
+        prompt: "Based on the vertex count, the polygon is a...",
+        options: ["Triangle (3)", "Quadrilateral (4)", "Pentagon (5)", "Hexagon (6)", "Heptagon (7)", "Octagon (8)"],
+        fields: [
+            { id: "vertex_count", label: "Number of Vertices Detected", type: "number" }
+        ]
+    },
+    "2": {
+        title: "Mission 02: Linear Calibration",
+        prompt: "This segment is recorded as...",
+        options: ["Short Edge", "Long Edge", "Equal Side"],
+        fields: [
+            { id: "side_length", label: "Side Length (mm)", type: "number" }
+        ]
+    },
     "5": {
         title: "Mission 05: Parallel Detect",
         prompt: "The lines are...",
@@ -34,42 +41,64 @@ const missionRegistry = {
             { id: "gap_start", label: "Gap at Start (mm)", type: "number" },
             { id: "gap_end", label: "Gap at End (mm)", type: "number" }
         ]
-    },
-    "17": {
-        title: "Mission 17: Triangle Sector",
-        prompt: "The entity is a...",
-        options: ["Equilateral Triangle", "Isosceles Triangle", "Scalene Triangle"],
-        fields: [
-            { id: "side_a", label: "Side A (mm)", type: "number" },
-            { id: "side_b", label: "Side B (mm)", type: "number" },
-            { id: "side_c", label: "Side C (mm)", type: "number" }
-        ]
     }
 };
 
+// --- APP STATE ---
 let activeAgents = [];
+let sessionFiles = [];
 let currentMissionId = null;
 
-// --- APP FUNCTIONS ---
+// --- NAVIGATION ---
+window.showScreen = (id) => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    // Always scroll to top when changing screens
+    document.querySelector('main').scrollTop = 0;
+};
+
+// --- AGENT LOGIN ---
 window.addAgent = () => {
-    const pin = document.getElementById('pin-input').value;
+    const input = document.getElementById('pin-input');
+    const pin = input.value;
     if (pin.length === 4) {
         activeAgents.push(pin);
         const pill = document.createElement('span');
         pill.className = 'agent-pill';
         pill.innerText = 'Agent ' + pin;
         document.getElementById('active-agents-list').appendChild(pill);
-        document.getElementById('pin-input').value = '';
+        input.value = '';
+    } else {
+        alert("Agent PIN must be 4 digits.");
     }
 };
 
 window.proceedToMissions = () => {
     if (activeAgents.length > 0) {
+        document.getElementById('archive-btn').style.display = 'block';
+        document.getElementById('logout-btn').style.display = 'block';
+        document.getElementById('mission-status-label').innerText = "ONLINE";
         renderMissionList();
         showScreen('mission-screen');
-    } else { alert("Log in agents first!"); }
+    } else {
+        alert("Access Denied: Log in Agents to continue.");
+    }
 };
 
+// --- LOGOUT ---
+window.secureLogout = () => {
+    if (confirm("Terminate Session? Data will be securely filed.")) {
+        activeAgents = [];
+        sessionFiles = [];
+        document.getElementById('active-agents-list').innerHTML = '';
+        document.getElementById('archive-btn').style.display = 'none';
+        document.getElementById('logout-btn').style.display = 'none';
+        document.getElementById('mission-status-label').innerText = "OFFLINE";
+        showScreen('login-screen');
+    }
+};
+
+// --- MISSION MANAGEMENT ---
 function renderMissionList() {
     const list = document.getElementById('mission-list');
     list.innerHTML = '';
@@ -77,7 +106,6 @@ function renderMissionList() {
         const m = missionRegistry[id];
         const btn = document.createElement('button');
         btn.className = 'sia-btn';
-        btn.style.width = '100%';
         btn.innerText = m.title;
         btn.onclick = () => launchMission(id);
         list.appendChild(btn);
@@ -88,31 +116,27 @@ function launchMission(id) {
     currentMissionId = id;
     const m = missionRegistry[id];
     
-    // Update the UI Labels
     document.getElementById('current-mission-title').innerText = m.title;
     document.getElementById('prompt-conclusion').innerText = m.prompt;
 
     const inputArea = document.getElementById('attribute-inputs');
-    inputArea.innerHTML = '<h4 style="color:var(--sia-neon); margin-top:0;">FIELD DATA</h4>';
+    inputArea.innerHTML = '<h4 style="color:var(--sia-neon); margin: 0 0 10px 0;">FIELD SENSORS</h4>';
     
     m.fields.forEach(f => {
-        // We add an "oninput" listener here. 
-        // If they type '3' in the vertex box, we can eventually 
-        // make the app 'nudge' them if they pick 'Hexagon' later.
         inputArea.innerHTML += `
             <div style="margin-bottom:15px;">
-                <label style="display:block; font-size:0.9rem; color:var(--sia-blue);">${f.label}</label>
-                <input type="${f.type}" id="${f.id}" class="sia-input" style="width:95%; border-color:var(--sia-neon);">
+                <label style="display:block; font-size:0.8rem; color:var(--sia-blue); margin-bottom:5px;">${f.label}</label>
+                <input type="${f.type}" id="${f.id}" class="sia-input" style="width:100%; margin:0;">
             </div>`;
     });
 
     const select = document.getElementById('box-conclusion');
-    select.innerHTML = '<option value="">-- IDENTIFY ENTITY --</option>';
+    select.innerHTML = '<option value="">-- CLASSIFY ENTITY --</option>';
     m.options.forEach(opt => {
         select.innerHTML += `<option value="${opt}">${opt}</option>`;
     });
 
-    // Reset reasoning boxes for new mission
+    // Reset reasoning boxes
     document.getElementById('box-because').value = '';
     document.getElementById('box-but').value = '';
     document.getElementById('box-so').value = '';
@@ -120,55 +144,31 @@ function launchMission(id) {
     showScreen('terminal-screen');
 }
 
-window.requestTeacherAccess = () => {
-    const code = prompt("ENTER COMMAND CLEARANCE CODE:");
-    if (code === "SIA2026") { // You can change this code
-        showScreen('teacher-screen');
-        loadTeacherDashboard();
-    }
-};
-
-async function loadTeacherDashboard() {
-    const container = document.getElementById('teacher-feed');
-    container.innerHTML = "Fetching intelligence reports...";
-    
-    const querySnapshot = await getDocs(collection(db, "submissions"));
-    container.innerHTML = '';
-    
-    querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const entry = document.createElement('div');
-        entry.className = 'sia-card';
-        entry.style.border = "1px solid var(--sia-blue)";
-        entry.style.margin = "10px 0";
-        entry.style.padding = "10px";
-        
-        entry.innerHTML = `
-            <strong>Mission ${data.missionId}</strong> | Agents: ${data.agents.join(', ')}<br>
-            <small>${data.timestamp.toDate().toLocaleString()}</small><hr>
-            <b>So:</b> ${data.conclusion}<br>
-            <b>Reasoning:</b> ${data.because}... but ${data.but}... so ${data.so}
-        `;
-        container.appendChild(entry);
-    });
-}
-
+// --- DATA SUBMISSION ---
 window.submitMission = async () => {
     const btn = document.getElementById('submit-btn');
+    const conclusion = document.getElementById('box-conclusion').value;
+
+    if (!conclusion) {
+        alert("Agent Alert: Classification Required.");
+        return;
+    }
+
     btn.innerText = "UPLOADING...";
     btn.disabled = true;
 
-    // Collect Dynamic Data
-    const missionData = {};
+    // Map dynamic fields
+    const measurements = {};
     missionRegistry[currentMissionId].fields.forEach(f => {
-        missionData[f.id] = document.getElementById(f.id).value;
+        measurements[f.id] = document.getElementById(f.id).value;
     });
 
     const report = {
         missionId: currentMissionId,
-        agents: activeAgents,
-        measurements: missionData,
-        conclusion: document.getElementById('box-conclusion').value,
+        missionTitle: missionRegistry[currentMissionId].title,
+        agents: [...activeAgents],
+        measurements: measurements,
+        conclusion: conclusion,
         because: document.getElementById('box-because').value,
         but: document.getElementById('box-but').value,
         so: document.getElementById('box-so').value,
@@ -177,23 +177,83 @@ window.submitMission = async () => {
 
     try {
         await addDoc(collection(db, "submissions"), report);
-        alert("REPORT FILED SUCCESSFULLY!");
-        // Clear fields and go back
-        document.getElementById('box-because').value = '';
-        document.getElementById('box-but').value = '';
-        document.getElementById('box-so').value = '';
+        
+        // Add to local session archive
+        sessionFiles.unshift(report);
+        updateLocalArchiveUI();
+
+        alert("INTELLIGENCE FILED SUCCESSFULLY.");
         btn.innerText = "FILE REPORT TO COMMAND";
         btn.disabled = false;
         showScreen('mission-screen');
     } catch (e) {
-        console.error("Error: ", e);
+        console.error("Upload Error: ", e);
         alert("Upload Failed. Check connection.");
         btn.disabled = false;
     }
 };
 
-window.showScreen = (id) => {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+// --- ARCHIVE LOGIC ---
+function updateLocalArchiveUI() {
+    const container = document.getElementById('local-archive-list');
+    container.innerHTML = '';
+    sessionFiles.forEach(file => {
+        const card = document.createElement('div');
+        card.style.background = '#161b22';
+        card.style.borderLeft = '4px solid var(--sia-neon)';
+        card.style.padding = '10px';
+        card.style.marginBottom = '10px';
+        card.innerHTML = `
+            <div style="font-size:0.7rem; color:var(--sia-blue);">MISSION ${file.missionId}</div>
+            <div style="font-weight:bold;">${file.conclusion}</div>
+            <div style="font-size:0.8rem; color:gray; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                Because ${file.because}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// --- TEACHER ACCESS ---
+window.requestTeacherAccess = () => {
+    const code = prompt("CLEARANCE LEVEL 5 REQUIRED:");
+    if (code === "SIA2026") {
+        showScreen('teacher-screen');
+        loadTeacherDashboard();
+    } else if (code !== null) {
+        alert("Access Denied.");
+    }
 };
 
+async function loadTeacherDashboard() {
+    const feed = document.getElementById('teacher-feed');
+    feed.innerHTML = "Accessing Database...";
+    
+    try {
+        const q = query(collection(db, "submissions"), orderBy("timestamp", "desc"));
+        const snap = await getDocs(q);
+        feed.innerHTML = '';
+        
+        snap.forEach((doc) => {
+            const d = doc.data();
+            const card = document.createElement('div');
+            card.className = 'sia-card';
+            card.style.border = '1px solid #333';
+            card.style.padding = '10px';
+            card.style.marginBottom = '10px';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                    <span style="color:var(--sia-neon)">M${d.missionId}: ${d.conclusion}</span>
+                    <span>Agents: ${d.agents.join(', ')}</span>
+                </div>
+                <div style="font-size:0.8rem; margin-top:5px; color:#ccc;">
+                    <b>B:</b> ${d.because} <br> <b>B:</b> ${d.but} <br> <b>S:</b> ${d.so}
+                </div>
+            `;
+            feed.appendChild(card);
+        });
+    } catch (e) {
+        feed.innerHTML = "Error loading intelligence feed.";
+        console.error(e);
+    }
+}
