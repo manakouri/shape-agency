@@ -6,68 +6,84 @@
     <title>SIA | Intelligence Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --sia-neon: #00ff95;
-            --sia-blue: #0088ff;
-            --sia-bg: #0a0e14;
-            --sia-card: #161b22;
-        }
+    :root {
+        --sia-neon: #00ff95;
+        --sia-blue: #0088ff;
+        --sia-bg: #0a0e14;
+        --sia-card: #161b22;
+    }
 
-        body {
-            background-color: var(--sia-bg);
-            color: white;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            overflow: hidden; /* Prevents bounce scrolling on tablets */
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
+    body {
+        background-color: var(--sia-bg);
+        color: white;
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh; /* Keeps the app height to the screen */
+    }
 
-        header {
-            padding: 15px;
-            background: rgba(0,0,0,0.5);
-            border-bottom: 2px solid var(--sia-blue);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    header {
+        padding: 15px;
+        background: #000;
+        border-bottom: 2px solid var(--sia-blue);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky; /* Keeps header at top */
+        top: 0;
+        z-index: 100;
+    }
 
-        .screen { display: none; padding: 20px; flex: 1; overflow-y: auto; }
-        .active { display: flex; flex-direction: column; }
+    main {
+        flex: 1;
+        overflow-y: auto; /* This enables scrolling for the content! */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
+    }
 
-        /* Agency UI Elements */
-        .sia-btn {
-            background: transparent;
-            border: 2px solid var(--sia-neon);
-            color: var(--sia-neon);
-            padding: 15px 25px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            cursor: pointer;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
+    .screen { 
+        display: none; 
+        padding: 20px; 
+        padding-bottom: 60px; /* Space so the bottom button isn't cut off */
+    }
 
-        .sia-input {
-            background: #000;
-            border: 1px solid var(--sia-blue);
-            color: white;
-            padding: 15px;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            border-radius: 4px;
-        }
+    .active { display: block; }
 
-        .agent-pill {
-            background: var(--sia-blue);
-            padding: 5px 10px;
-            border-radius: 20px;
-            margin: 5px;
-            font-size: 0.8rem;
-        }
-    </style>
+    .sia-btn {
+        background: transparent;
+        border: 2px solid var(--sia-neon);
+        color: var(--sia-neon);
+        padding: 18px 25px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        cursor: pointer;
+        border-radius: 4px;
+        margin: 10px 0;
+        width: 100%; /* Better for touch targets */
+        font-size: 1rem;
+    }
+
+    .sia-input {
+        background: #000;
+        border: 1px solid var(--sia-blue);
+        color: white;
+        padding: 15px;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        box-sizing: border-box; /* Prevents input from being wider than screen */
+    }
+
+    .agent-pill {
+        background: var(--sia-blue);
+        padding: 8px 15px;
+        border-radius: 20px;
+        margin: 5px;
+        display: inline-block;
+        font-size: 0.9rem;
+    }
+</style>
 </head>
 <body>
 
