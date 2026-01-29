@@ -87,23 +87,35 @@ function renderMissionList() {
 function launchMission(id) {
     currentMissionId = id;
     const m = missionRegistry[id];
+    
+    // Update the UI Labels
     document.getElementById('current-mission-title').innerText = m.title;
     document.getElementById('prompt-conclusion').innerText = m.prompt;
 
-    // Build Dynamic Inputs
     const inputArea = document.getElementById('attribute-inputs');
-    inputArea.innerHTML = '';
+    inputArea.innerHTML = '<h4 style="color:var(--sia-neon); margin-top:0;">FIELD DATA</h4>';
+    
     m.fields.forEach(f => {
-        inputArea.innerHTML += `<label>${f.label}</label>
-        <input type="${f.type}" id="${f.id}" class="sia-input" style="width:95%">`;
+        // We add an "oninput" listener here. 
+        // If they type '3' in the vertex box, we can eventually 
+        // make the app 'nudge' them if they pick 'Hexagon' later.
+        inputArea.innerHTML += `
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:0.9rem; color:var(--sia-blue);">${f.label}</label>
+                <input type="${f.type}" id="${f.id}" class="sia-input" style="width:95%; border-color:var(--sia-neon);">
+            </div>`;
     });
 
-    // Build Dropdown Options
     const select = document.getElementById('box-conclusion');
-    select.innerHTML = '<option value="">-- Select Identity --</option>';
+    select.innerHTML = '<option value="">-- IDENTIFY ENTITY --</option>';
     m.options.forEach(opt => {
         select.innerHTML += `<option value="${opt}">${opt}</option>`;
     });
+
+    // Reset reasoning boxes for new mission
+    document.getElementById('box-because').value = '';
+    document.getElementById('box-but').value = '';
+    document.getElementById('box-so').value = '';
 
     showScreen('terminal-screen');
 }
