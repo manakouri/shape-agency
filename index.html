@@ -5,88 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SIA | Strategic Intelligence Archive</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --sia-neon: #00ff95;
-            --sia-blue: #0088ff;
-            --sia-bg: #0a0e14;
-            --sia-card: #161b22;
-        }
-
-        body {
-            background-color: var(--sia-bg);
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        header {
-            height: 100px;
-            padding: 0 20px;
-            background: #000;
-            border-bottom: 3px solid var(--sia-blue);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        main {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 50px;
-        }
-
-        .screen { display: none; padding: 20px; }
+        :root { --sia-neon: #00ff95; --sia-blue: #0088ff; --sia-bg: #0a0e14; --sia-card: #161b22; }
+        body { background-color: var(--sia-bg); color: white; font-family: 'Roboto', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { height: 100px; padding: 0 20px; background: #000; border-bottom: 3px solid var(--sia-blue); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; z-index: 100; }
+        main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .screen { display: none; padding: 20px; max-width: 800px; margin: 0 auto; }
         .active { display: block; }
-
-        .sia-card {
-            background: var(--sia-card);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #2d333b;
-        }
-
-        .sia-btn {
-            background: transparent;
-            border: 2px solid var(--sia-neon);
-            color: var(--sia-neon);
-            padding: 15px 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            cursor: pointer;
-            border-radius: 4px;
-            width: 100%;
-            margin: 10px 0;
-        }
-
-        .sia-input {
-            background: #000;
-            border: 1px solid var(--sia-blue);
-            color: white;
-            padding: 12px;
-            font-size: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-            border-radius: 4px;
-        }
-
-        .agent-pill {
-            display: inline-block;
-            background: var(--sia-blue);
-            padding: 5px 12px;
-            border-radius: 20px;
-            margin: 5px;
-            font-size: 0.8rem;
-        }
-
-        label { color: var(--sia-blue); font-size: 0.8rem; display: block; margin-bottom: 5px; }
+        h1, h2, h3, .logo-text { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+        .sia-card { background: var(--sia-card); border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #2d333b; }
+        .sia-btn { background: transparent; border: 2px solid var(--sia-neon); color: var(--sia-neon); padding: 15px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; margin: 10px 0; font-family: 'Orbitron'; transition: 0.3s; }
+        .sia-btn:hover { background: rgba(0, 255, 149, 0.1); }
+        .sia-input { background: #000; border: 1px solid var(--sia-blue); color: white; padding: 12px; font-size: 1rem; width: 100%; box-sizing: border-box; margin-bottom: 15px; border-radius: 4px; }
+        .agent-pill { display: inline-block; background: var(--sia-blue); padding: 5px 12px; border-radius: 20px; margin: 5px; font-size: 0.8rem; font-weight: bold; }
+        label { color: var(--sia-blue); font-size: 0.8rem; display: block; margin-bottom: 5px; font-weight: bold; }
+        textarea.sia-input { height: 80px; resize: none; }
     </style>
 </head>
 <body>
@@ -98,66 +32,71 @@
              <div style="position: absolute; height: 100%; width: 2px; background: var(--sia-neon);"></div>
         </div>
         <div style="line-height: 1.1;">
-            <span style="letter-spacing: 5px; font-weight: 900; font-size: 1.6rem;">SIA</span><br>
+            <span class="logo-text" style="font-size: 1.6rem; color: #fff;">SIA</span><br>
             <span style="font-size: 0.6rem; color: var(--sia-blue);">STRATEGIC INTELLIGENCE ARCHIVE</span>
         </div>
     </div>
     <div id="session-controls" style="display:none; gap: 10px;">
-        <button onclick="showScreen('home-screen')" style="background:none; border:1px solid var(--sia-blue); color:var(--sia-blue); padding:5px 10px; cursor:pointer;">HOME</button>
-        <button onclick="secureLogout()" style="background:var(--sia-neon); color:#000; border:none; padding:5px 10px; cursor:pointer; font-weight:bold;">LOGOUT</button>
+        <button onclick="showScreen('home-screen')" class="sia-btn" style="width:auto; padding: 5px 15px; border-color:var(--sia-blue); color:var(--sia-blue);">HOME</button>
+        <button onclick="secureLogout()" class="sia-btn" style="width:auto; padding: 5px 15px; background:var(--sia-neon); color:#000;">LOGOUT</button>
     </div>
-    <i class="fas fa-cog" onclick="requestTeacherAccess()" style="color: #1a1f26; cursor: pointer;"></i>
 </header>
 
-<main id="app-container">
+<main>
     <section id="login-screen" class="screen active">
-        <h2>AGENT REGISTRATION</h2>
-        <div id="active-agents-list" style="margin-bottom:15px;"></div>
-        <input type="number" id="agent-id-input" class="sia-input" placeholder="Enter 4-Digit Agent Code">
-        <button class="sia-btn" onclick="registerAgent()">Add Agent to Team</button>
-        <button class="sia-btn" onclick="startOperation()" style="border-color:var(--sia-blue); color:var(--sia-blue);">Begin Operation</button>
+        <h2 style="color: var(--sia-neon);">TERMINAL ACCESS</h2>
+        <div class="sia-card">
+            <label>STAFF GATEWAY</label>
+            <button class="sia-btn" onclick="teacherLogin()" style="border-color: #fff; color: #fff;">
+                <i class="fab fa-google"></i> TEACHER LOGIN
+            </button>
+        </div>
+        <div class="sia-card">
+            <label>AGENT REGISTRATION</label>
+            <div id="active-agents-list" style="margin-bottom:10px;"></div>
+            <input type="number" id="agent-id-input" class="sia-input" placeholder="4-DIGIT AGENT CODE">
+            <button class="sia-btn" onclick="registerAgent()">IDENTIFY AGENT</button>
+            <button class="sia-btn" onclick="startOperation()" style="border-color:var(--sia-blue); color:var(--sia-blue);">BEGIN OPERATION</button>
+        </div>
     </section>
 
     <section id="home-screen" class="screen">
         <h2>COMMAND HUB</h2>
         <div class="sia-card">
             <button class="sia-btn" onclick="renderMissionHub()">FIELD MISSIONS</button>
-            <button class="sia-btn" onclick="renderPolygonArchiveGrid()">POLYGON FILES</button>
+            <button class="sia-btn" onclick="renderPolygonArchiveGrid()">POLYGON ARCHIVE</button>
         </div>
     </section>
 
     <section id="mission-hub" class="screen">
         <h2>ACTIVE MISSIONS</h2>
         <div id="active-mission-list"></div>
-        <button class="sia-btn" onclick="showScreen('home-screen')" style="border:none; color:gray;">BACK</button>
     </section>
 
     <section id="mission-entry" class="screen">
         <h2 id="entry-title">DATA ENTRY</h2>
         <div id="polygon-entry-list"></div>
-        <button class="sia-btn" onclick="submitMissionBatch()">FILE MISSION REPORT</button>
+        <button id="submit-batch-btn" class="sia-btn" onclick="submitMissionBatch()">FILE MISSION REPORT</button>
     </section>
 
     <section id="polygon-archive" class="screen">
-        <h2>POLYGON INTELLIGENCE</h2>
+        <h2>POLYGON ARCHIVE</h2>
         <div id="polygon-archive-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"></div>
     </section>
 
     <section id="polygon-detail-screen" class="screen">
-        <h2 id="detail-polygon-name">SPECIMEN DATA</h2>
+        <h2 id="detail-polygon-name" style="color:var(--sia-neon);">POLYGON FILE</h2>
         <div id="polygon-history"></div>
-        <button class="sia-btn" onclick="showScreen('polygon-archive')">BACK TO ARCHIVE</button>
+        <button class="sia-btn" onclick="showScreen('polygon-archive')">RETURN TO ARCHIVE</button>
     </section>
 
     <section id="teacher-screen" class="screen">
         <h2>COMMANDER CONSOLE</h2>
         <div class="sia-card">
-            <label>Release Mission:</label>
+            <label>RELEASE MISSION TO FIELD</label>
             <select id="mission-release-select" class="sia-input"></select>
             <button class="sia-btn" onclick="releaseMission()">AUTHORIZE RELEASE</button>
         </div>
-        <div id="live-data-feed"></div>
-        <button class="sia-btn" onclick="showScreen('login-screen')">LOGOUT CONSOLE</button>
     </section>
 </main>
 
