@@ -16,7 +16,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// --- MISSION REGISTRY ---
+// --- MASTER MISSION REGISTRY ---
 const missionRegistry = {
     "1": { title: "Counting Vertices", type: "bulk", fields: [{id:"v", label:"Number of Vertices", type:"number"}] },
     "2": { title: "Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm)", type:"text"}] },
@@ -52,10 +52,11 @@ const deepFields = [
     {id:"sym", label:"Symmetry Lines", type:"number"}
 ];
 
-// --- STATE & AUTH ---
+// --- APP STATE ---
 let loggedInAgents = [];
 let activeMissionId = 1;
 
+// --- AUTHENTICATION & TEACHER LOGIC ---
 onSnapshot(doc(db, "system", "config"), (snapshot) => {
     if (snapshot.exists()) activeMissionId = snapshot.data().currentMission;
 });
@@ -66,6 +67,7 @@ window.teacherLogin = () => {
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
+        loadRoster();
         const sel = document.getElementById('mission-release-select');
         sel.innerHTML = '';
         Object.keys(missionRegistry).forEach(k => {
@@ -75,24 +77,54 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+window.createNewAgent = async () => {
+    const name = document.getElementById('new-agent-name').value;
+    const code = document.getElementById('new-agent-code').value;
+    if (name && code.length === 4) {
+        await setDoc(doc(db, "roster", code), { agentName: name, agentCode: code, created: new Date() });
+        alert(`Agent ${name} Authorized.`);
+        document.getElementById('new-agent-name').value = '';
+        document.getElementById('new-agent-code').value = '';
+        loadRoster();
+    } else { alert("Provide a name and 4-digit code."); }
+};
+
+async function loadRoster() {
+    const list = document.getElementById('roster-list');
+    const snap = await getDocs(collection(db, "roster"));
+    list.innerHTML = '<h4>AUTHORIZED AGENTS</h4>';
+    snap.forEach(doc => {
+        const a = doc.data();
+        list.innerHTML += `<div style="font-size:0.8rem; margin:5px 0; color:var(--sia-blue);">${a.agentCode}: ${a.agentName}</div>`;
+    });
+}
+
 window.releaseMission = async () => {
     const val = document.getElementById('mission-release-select').value;
     await setDoc(doc(db, "system", "config"), { currentMission: parseInt(val) });
     alert("Field Protocol Updated: Mission " + val);
 };
 
-// --- AGENT ACTIONS ---
-window.registerAgent = () => {
+// --- AGENT ACTIONS & LOGIN ---
+window.registerAgent = async () => {
     const val = document.getElementById('agent-id-input').value;
     if (val.length === 4) {
-        if (!loggedInAgents.includes(val)) {
-            loggedInAgents.push(val);
-            const p = document.createElement('span');
-            p.className = 'agent-pill';
-            p.innerText = 'AGENT ' + val;
-            document.getElementById('active-agents-list').appendChild(p);
+        // Validate against Roster
+        const q = query(collection(db, "roster"), where("agentCode", "==", val));
+        const agentDoc = await getDocs(q);
+        
+        if (!agentDoc.empty) {
+            if (!loggedInAgents.includes(val)) {
+                loggedInAgents.push(val);
+                const p = document.createElement('span');
+                p.className = 'agent-pill';
+                p.innerText = 'AGENT ' + val;
+                document.getElementById('active-agents-list').appendChild(p);
+            }
+            document.getElementById('agent-id-input').value = '';
+        } else {
+            alert("INVALID CLEARANCE. Code not found in Roster.");
         }
-        document.getElementById('agent-id-input').value = '';
     }
 };
 
@@ -106,7 +138,7 @@ window.startOperation = () => {
 window.renderMissionHub = () => {
     const list = document.getElementById('active-mission-list');
     list.innerHTML = `
-        <div class="sia-card" onclick="openMission(${activeMissionId})">
+        <div class="sia-card" onclick="openMission(${activeMissionId})" style="cursor:pointer; border-color:var(--sia-neon);">
             <h3 style="color:var(--sia-neon)">MISSION ${activeMissionId} AUTHORIZED</h3>
             <p>${missionRegistry[activeMissionId].title}</p>
         </div>
@@ -138,7 +170,7 @@ window.openMission = (id) => {
         });
         container.innerHTML += `
             <div class="sia-card">
-                <h3>INTELLIGENCE REPORT</h3>
+                <h3>INVESTIGATION REPORT</h3>
                 <label>BECAUSE...</label><textarea id="rep-b" class="sia-input"></textarea>
                 <label>BUT...</label><textarea id="rep-bt" class="sia-input"></textarea>
                 <label>SO...</label><textarea id="rep-s" class="sia-input"></textarea>
@@ -176,13 +208,14 @@ window.submitMissionBatch = async () => {
 
     try {
         await addDoc(collection(db, "submissions"), data);
-        alert("Report Sealed.");
+        alert("Intelligence successfully filed to archive.");
         showScreen('home-screen');
-    } catch (e) { alert("Upload Error: " + e.message); }
+    } catch (e) { alert("Data transmission error."); }
     btn.disabled = false;
     btn.innerText = "FILE MISSION REPORT";
 };
 
+// --- ARCHIVE & DATA RETRIEVAL ---
 window.renderPolygonArchiveGrid = () => {
     const grid = document.getElementById('polygon-archive-grid');
     grid.innerHTML = '';
@@ -198,9 +231,10 @@ window.renderPolygonArchiveGrid = () => {
 };
 
 window.viewPolygonDetail = async (id) => {
-    document.getElementById('detail-polygon-name').innerText = "POLYGON " + id + " ARCHIVE";
+    const polyId = id.toString();
+    document.getElementById('detail-polygon-name').innerText = "POLYGON " + polyId + " INTELLIGENCE";
     const hist = document.getElementById('polygon-history');
-    hist.innerHTML = "ACCESSING ENCRYPTED FILES...";
+    hist.innerHTML = "<p style='color:var(--sia-blue)'>DECRYPTING FILES...</p>";
     
     try {
         const q = query(collection(db, "submissions"), 
@@ -210,25 +244,29 @@ window.viewPolygonDetail = async (id) => {
         hist.innerHTML = '';
         
         let found = false;
-        snap.forEach(doc => {
-            const d = doc.data();
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
             d.entries.forEach(e => {
-                if (e.polyId == id) {
+                if (e.polyId == polyId) {
                     found = true;
+                    const mInfo = missionRegistry[d.missionId];
                     hist.innerHTML += `
                         <div class="sia-card" style="border-left: 4px solid var(--sia-neon)">
-                            <label>MISSION ${d.missionId}: ${missionRegistry[d.missionId].title}</label>
-                            <div style="font-weight:bold; margin-top:5px;">${e.val}</div>
+                            <label>MISSION ${d.missionId}: ${mInfo.title}</label>
+                            <div style="font-weight:bold; margin-top:5px;">Data: ${e.val}</div>
                         </div>`;
                 }
             });
         });
-        if (!found) hist.innerHTML = "No intelligence gathered for Polygon " + id;
-    } catch (e) { hist.innerHTML = "Error retrieving data."; console.error(e); }
+        if (!found) hist.innerHTML = `<p>No intelligence gathered for Polygon ${polyId} yet.</p>`;
+    } catch (e) { 
+        console.error(e);
+        hist.innerHTML = "<p style='color:red'>ARCHIVE ACCESS DENIED.</p>"; 
+    }
     showScreen('polygon-detail-screen');
 };
 
-window.secureLogout = () => { if(confirm("End Session?")) location.reload(); };
+window.secureLogout = () => { if(confirm("Terminate Session?")) location.reload(); };
 
 window.showScreen = (id) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
