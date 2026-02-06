@@ -1,259 +1,209 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, doc, setDoc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-// --- FIREBASE SETUP ---
 const firebaseConfig = {
     apiKey: "AIzaSyAQ48kW1Eov65983S7J6WyHewrLcqw1-3o",
     authDomain: "geometry-87a8c.firebaseapp.com",
     projectId: "geometry-87a8c",
     storageBucket: "geometry-87a8c.firebasestorage.app",
     messagingSenderId: "535370913699",
-    appId: "1:535370913699:web:e3e3e6cb05e21df8666c16",
-    measurementId: "G-DQLDRDF3D8"
+    appId: "1:535370913699:web:e3e3e6cb05e21df8666c16"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- MISSION REGISTRY (Successive Steps) ---
+// --- MASTER MISSION REGISTRY ---
 const missionRegistry = {
-    "1": {
-        title: "Mission 01: Vertex Scan",
-        prompt: "Based on the vertex count, the polygon is a...",
-        options: ["Triangle (3)", "Quadrilateral (4)", "Pentagon (5)", "Hexagon (6)", "Heptagon (7)", "Octagon (8)"],
-        fields: [
-            { id: "vertex_count", label: "Number of Vertices Detected", type: "number" }
-        ]
-    },
-    "2": {
-        title: "Mission 02: Linear Calibration",
-        prompt: "This segment is recorded as...",
-        options: ["Short Edge", "Long Edge", "Equal Side"],
-        fields: [
-            { id: "side_length", label: "Side Length (mm)", type: "number" }
-        ]
-    },
-    "5": {
-        title: "Mission 05: Parallel Detect",
-        prompt: "The lines are...",
-        options: ["Parallel", "Intersecting", "Perpendicular"],
-        fields: [
-            { id: "gap_start", label: "Gap at Start (mm)", type: "number" },
-            { id: "gap_end", label: "Gap at End (mm)", type: "number" }
-        ]
+    "1": { title: "Counting Vertices", type: "bulk", fields: [{id:"v", label:"Vertices", type:"number"}] },
+    "2": { title: "Side Lengths", type: "bulk", fields: [{id:"len", label:"Lengths (cm)", type:"text"}] },
+    "3": { title: "Parallel Pairs", type: "bulk", fields: [{id:"para", label:"Parallel Pairs", type:"number"}] },
+    "4": { title: "Right Angles", type: "bulk", fields: [{id:"right", label:"Right Angles", type:"number"}] },
+    "5": { title: "Perpendicular Lines", type: "bulk", fields: [{id:"perp", label:"Perp. Pairs", type:"number"}] },
+    "6": { title: "Acute Angles", type: "bulk", fields: [{id:"acute", label:"Acute Angles", type:"number"}] },
+    "7": { title: "Angle Estimation", type: "bulk", fields: [{id:"est", label:"Estimate (0-180°)", type:"number"}] },
+    "8": { title: "Protractor Pulse", type: "bulk", fields: [{id:"exact", label:"Exact Degrees", type:"number"}] },
+    "9": { title: "Reflex Angles", type: "bulk", fields: [{id:"reflex", label:"Reflex Angles", type:"number"}] },
+    "10": { title: "Symmetry Probe", type: "bulk", fields: [{id:"symm", label:"Lines of Symmetry", type:"number"}] },
+    "11": { title: "Equilateral Triangles", type: "deep", target: "Triangle" },
+    "12": { title: "Isosceles Triangles", type: "deep", target: "Triangle" },
+    "13": { title: "Scalene Triangles", type: "deep", target: "Triangle" },
+    "14": { title: "Rectangles", type: "deep", target: "Quadrilateral" },
+    "15": { title: "Squares", type: "deep", target: "Quadrilateral" },
+    "16": { title: "Rhombus", type: "deep", target: "Quadrilateral" },
+    "17": { title: "Regularity Standard", type: "deep", target: "Polygon" },
+    "18": { title: "Pentagon", type: "deep", target: "Pentagon" },
+    "19": { title: "Hexagon", type: "deep", target: "Hexagon" },
+    "20": { title: "Septagon", type: "deep", target: "Septagon" },
+    "21": { title: "Nonagon", type: "deep", target: "Nonagon" },
+    "22": { title: "Decagon", type: "deep", target: "Decagon" },
+    "23": { title: "Hendecagon", type: "deep", target: "Hendecagon" },
+    "24": { title: "Dodecagon", type: "deep", target: "Dodecagon" }
+};
+
+const deepFields = [
+    {id:"v", label:"Vertices", type:"number"},
+    {id:"ang", label:"Angles (Type/Measure)", type:"text"},
+    {id:"par", label:"Parallel Pairs", type:"number"},
+    {id:"per", label:"Perp. Pairs", type:"number"},
+    {id:"sym", label:"Symmetry Lines", type:"number"}
+];
+
+// --- APP STATE ---
+let loggedInAgents = [];
+let activeMissionId = 1;
+
+// --- TEACHER LOGIC ---
+onSnapshot(doc(db, "system", "config"), (snapshot) => {
+    if (snapshot.exists()) activeMissionId = snapshot.data().currentMission;
+});
+
+window.requestTeacherAccess = () => {
+    if (prompt("CLEARANCE CODE:") === "SIA2026") {
+        const sel = document.getElementById('mission-release-select');
+        sel.innerHTML = '';
+        Object.keys(missionRegistry).forEach(k => {
+            sel.innerHTML += `<option value="${k}">${k}: ${missionRegistry[k].title}</option>`;
+        });
+        showScreen('teacher-screen');
     }
 };
 
-// --- APP STATE ---
-let activeAgents = [];
-let sessionFiles = [];
-let currentMissionId = null;
+window.releaseMission = async () => {
+    const val = document.getElementById('mission-release-select').value;
+    await setDoc(doc(db, "system", "config"), { currentMission: parseInt(val) });
+    alert("Mission " + val + " Authorized.");
+};
 
-// --- NAVIGATION ---
+// --- AGENT LOGIC ---
+window.registerAgent = () => {
+    const val = document.getElementById('agent-id-input').value;
+    if (val.length === 4) {
+        loggedInAgents.push(val);
+        const p = document.createElement('span');
+        p.className = 'agent-pill';
+        p.innerText = 'Agent ' + val;
+        document.getElementById('active-agents-list').appendChild(p);
+        document.getElementById('agent-id-input').value = '';
+    }
+};
+
+window.startOperation = () => {
+    if (loggedInAgents.length > 0) {
+        document.getElementById('session-controls').style.display = 'flex';
+        showScreen('home-screen');
+    }
+};
+
+window.renderMissionHub = () => {
+    const list = document.getElementById('active-mission-list');
+    list.innerHTML = `
+        <div class="sia-card" onclick="openMission(${activeMissionId})">
+            <h3 style="color:var(--sia-neon)">MISSION ${activeMissionId} AVAILABLE</h3>
+            <p>${missionRegistry[activeMissionId].title}</p>
+        </div>`;
+    showScreen('mission-hub');
+};
+
+window.openMission = (id) => {
+    const m = missionRegistry[id];
+    const container = document.getElementById('polygon-entry-list');
+    container.innerHTML = '';
+    document.getElementById('entry-title').innerText = m.title;
+
+    if (m.type === "bulk") {
+        for (let i = 1; i <= 10; i++) {
+            container.innerHTML += `
+                <div class="sia-card">
+                    <h3>POLYGON ${i}</h3>
+                    ${m.fields.map(f => `<label>${f.label}</label><input type="${f.type}" class="sia-input m-in" data-poly="${i}" data-f="${f.id}">`).join('')}
+                </div>`;
+        }
+    } else {
+        ['A', 'B', 'C'].forEach(v => {
+            container.innerHTML += `
+                <div class="sia-card">
+                    <h3 style="color:var(--sia-blue)">Variant ${v}</h3>
+                    ${deepFields.map(f => `<label>${f.label}</label><input type="${f.type}" class="sia-input m-in" data-variant="${v}" data-f="${f.id}">`).join('')}
+                </div>`;
+        });
+        container.innerHTML += `
+            <div class="sia-card">
+                <h3>WRITTEN REPORT</h3>
+                <label>BECAUSE...</label><textarea id="rep-b" class="sia-input"></textarea>
+                <label>BUT...</label><textarea id="rep-bt" class="sia-input"></textarea>
+                <label>SO...</label><textarea id="rep-s" class="sia-input"></textarea>
+            </div>`;
+    }
+    showScreen('mission-entry');
+};
+
+window.submitMissionBatch = async () => {
+    const inputs = document.querySelectorAll('.m-in');
+    const mission = missionRegistry[activeMissionId];
+    const data = {
+        missionId: activeMissionId,
+        agents: loggedInAgents,
+        timestamp: new Date(),
+        entries: []
+    };
+
+    inputs.forEach(i => {
+        data.entries.push({
+            polyId: i.dataset.poly || null,
+            variant: i.dataset.variant || null,
+            field: i.dataset.f,
+            val: i.value
+        });
+    });
+
+    if (mission.type === "deep") {
+        data.report = { b: document.getElementById('rep-b').value, bt: document.getElementById('rep-bt').value, s: document.getElementById('rep-s').value };
+    }
+
+    await addDoc(collection(db, "submissions"), data);
+    alert("Report Filed.");
+    showScreen('home-screen');
+};
+
+window.renderPolygonArchiveGrid = () => {
+    const grid = document.getElementById('polygon-archive-grid');
+    grid.innerHTML = '';
+    for (let i = 1; i <= 10; i++) {
+        const b = document.createElement('button');
+        b.className = 'sia-btn';
+        b.innerText = "Specimen " + i;
+        b.onclick = () => viewPolygonDetail(i);
+        grid.appendChild(b);
+    }
+    showScreen('polygon-archive');
+};
+
+window.viewPolygonDetail = async (id) => {
+    document.getElementById('detail-polygon-name').innerText = "Specimen " + id;
+    const hist = document.getElementById('polygon-history');
+    hist.innerHTML = "Scanning Archives...";
+    
+    const q = query(collection(db, "submissions"), where("agents", "array-contains-any", loggedInAgents));
+    const snap = await getDocs(q);
+    hist.innerHTML = '';
+    
+    snap.forEach(doc => {
+        const d = doc.data();
+        d.entries.forEach(e => {
+            if (e.polyId == id) {
+                hist.innerHTML += `<div class="sia-card" style="font-size:0.8rem"><b>M${d.missionId}:</b> ${e.val}</div>`;
+            }
+        });
+    });
+    showScreen('polygon-detail-screen');
+};
+
+window.secureLogout = () => {
+    if(confirm("Secure Logout?")) location.reload();
+};
+
 window.showScreen = (id) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    // Always scroll to top when changing screens
-    document.querySelector('main').scrollTop = 0;
 };
-
-// --- AGENT LOGIN ---
-window.addAgent = () => {
-    const input = document.getElementById('pin-input');
-    const pin = input.value;
-    if (pin.length === 4) {
-        activeAgents.push(pin);
-        const pill = document.createElement('span');
-        pill.className = 'agent-pill';
-        pill.innerText = 'Agent ' + pin;
-        document.getElementById('active-agents-list').appendChild(pill);
-        input.value = '';
-    } else {
-        alert("Agent PIN must be 4 digits.");
-    }
-};
-
-window.proceedToMissions = () => {
-    if (activeAgents.length > 0) {
-        document.getElementById('archive-btn').style.display = 'block';
-        document.getElementById('logout-btn').style.display = 'block';
-        document.getElementById('mission-status-label').innerText = "ONLINE";
-        renderMissionList();
-        showScreen('mission-screen');
-    } else {
-        alert("Access Denied: Log in Agents to continue.");
-    }
-};
-
-// --- LOGOUT ---
-window.secureLogout = () => {
-    if (confirm("Terminate Session? Data will be securely filed.")) {
-        activeAgents = [];
-        sessionFiles = [];
-        document.getElementById('active-agents-list').innerHTML = '';
-        document.getElementById('archive-btn').style.display = 'none';
-        document.getElementById('logout-btn').style.display = 'none';
-        document.getElementById('mission-status-label').innerText = "OFFLINE";
-        showScreen('login-screen');
-    }
-};
-
-// --- MISSION MANAGEMENT ---
-function renderMissionList() {
-    const list = document.getElementById('mission-list');
-    list.innerHTML = '';
-    Object.keys(missionRegistry).forEach(id => {
-        const m = missionRegistry[id];
-        const btn = document.createElement('button');
-        btn.className = 'sia-btn';
-        btn.innerText = m.title;
-        btn.onclick = () => launchMission(id);
-        list.appendChild(btn);
-    });
-}
-
-function launchMission(id) {
-    currentMissionId = id;
-    const m = missionRegistry[id];
-    
-    document.getElementById('current-mission-title').innerText = m.title;
-    document.getElementById('prompt-conclusion').innerText = m.prompt;
-
-    const inputArea = document.getElementById('attribute-inputs');
-    inputArea.innerHTML = '<h4 style="color:var(--sia-neon); margin: 0 0 10px 0;">FIELD SENSORS</h4>';
-    
-    m.fields.forEach(f => {
-        inputArea.innerHTML += `
-            <div style="margin-bottom:15px;">
-                <label style="display:block; font-size:0.8rem; color:var(--sia-blue); margin-bottom:5px;">${f.label}</label>
-                <input type="${f.type}" id="${f.id}" class="sia-input" style="width:100%; margin:0;">
-            </div>`;
-    });
-
-    const select = document.getElementById('box-conclusion');
-    select.innerHTML = '<option value="">-- CLASSIFY ENTITY --</option>';
-    m.options.forEach(opt => {
-        select.innerHTML += `<option value="${opt}">${opt}</option>`;
-    });
-
-    // Reset reasoning boxes
-    document.getElementById('box-because').value = '';
-    document.getElementById('box-but').value = '';
-    document.getElementById('box-so').value = '';
-
-    showScreen('terminal-screen');
-}
-
-// --- DATA SUBMISSION ---
-window.submitMission = async () => {
-    const btn = document.getElementById('submit-btn');
-    const conclusion = document.getElementById('box-conclusion').value;
-
-    if (!conclusion) {
-        alert("Agent Alert: Classification Required.");
-        return;
-    }
-
-    btn.innerText = "UPLOADING...";
-    btn.disabled = true;
-
-    // Map dynamic fields
-    const measurements = {};
-    missionRegistry[currentMissionId].fields.forEach(f => {
-        measurements[f.id] = document.getElementById(f.id).value;
-    });
-
-    const report = {
-        missionId: currentMissionId,
-        missionTitle: missionRegistry[currentMissionId].title,
-        agents: [...activeAgents],
-        measurements: measurements,
-        conclusion: conclusion,
-        because: document.getElementById('box-because').value,
-        but: document.getElementById('box-but').value,
-        so: document.getElementById('box-so').value,
-        timestamp: new Date()
-    };
-
-    try {
-        await addDoc(collection(db, "submissions"), report);
-        
-        // Add to local session archive
-        sessionFiles.unshift(report);
-        updateLocalArchiveUI();
-
-        alert("INTELLIGENCE FILED SUCCESSFULLY.");
-        btn.innerText = "FILE REPORT TO COMMAND";
-        btn.disabled = false;
-        showScreen('mission-screen');
-    } catch (e) {
-        console.error("Upload Error: ", e);
-        alert("Upload Failed. Check connection.");
-        btn.disabled = false;
-    }
-};
-
-// --- ARCHIVE LOGIC ---
-function updateLocalArchiveUI() {
-    const container = document.getElementById('local-archive-list');
-    container.innerHTML = '';
-    sessionFiles.forEach(file => {
-        const card = document.createElement('div');
-        card.style.background = '#161b22';
-        card.style.borderLeft = '4px solid var(--sia-neon)';
-        card.style.padding = '10px';
-        card.style.marginBottom = '10px';
-        card.innerHTML = `
-            <div style="font-size:0.7rem; color:var(--sia-blue);">MISSION ${file.missionId}</div>
-            <div style="font-weight:bold;">${file.conclusion}</div>
-            <div style="font-size:0.8rem; color:gray; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                Because ${file.because}
-            </div>
-        `;
-        container.appendChild(card);
-    });
-}
-
-// --- TEACHER ACCESS ---
-window.requestTeacherAccess = () => {
-    const code = prompt("CLEARANCE LEVEL 5 REQUIRED:");
-    if (code === "SIA2026") {
-        showScreen('teacher-screen');
-        loadTeacherDashboard();
-    } else if (code !== null) {
-        alert("Access Denied.");
-    }
-};
-
-async function loadTeacherDashboard() {
-    const feed = document.getElementById('teacher-feed');
-    feed.innerHTML = "Accessing Database...";
-    
-    try {
-        const q = query(collection(db, "submissions"), orderBy("timestamp", "desc"));
-        const snap = await getDocs(q);
-        feed.innerHTML = '';
-        
-        snap.forEach((doc) => {
-            const d = doc.data();
-            const card = document.createElement('div');
-            card.className = 'sia-card';
-            card.style.border = '1px solid #333';
-            card.style.padding = '10px';
-            card.style.marginBottom = '10px';
-            card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                    <span style="color:var(--sia-neon)">M${d.missionId}: ${d.conclusion}</span>
-                    <span>Agents: ${d.agents.join(', ')}</span>
-                </div>
-                <div style="font-size:0.8rem; margin-top:5px; color:#ccc;">
-                    <b>B:</b> ${d.because} <br> <b>B:</b> ${d.but} <br> <b>S:</b> ${d.so}
-                </div>
-            `;
-            feed.appendChild(card);
-        });
-    } catch (e) {
-        feed.innerHTML = "Error loading intelligence feed.";
-        console.error(e);
-    }
-}
