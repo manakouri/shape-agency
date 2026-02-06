@@ -3,159 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SIA | Intelligence Portal</title>
+    <title>SIA | Strategic Intelligence Archive</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-    :root {
-        --sia-neon: #00ff95;
-        --sia-blue: #0088ff;
-        --sia-bg: #0a0e14;
-        --sia-card: #161b22;
-    }
+        :root {
+            --sia-neon: #00ff95;
+            --sia-blue: #0088ff;
+            --sia-bg: #0a0e14;
+            --sia-card: #161b22;
+        }
 
-    body {
-        background-color: var(--sia-bg);
-        color: white;
-        font-family: 'Segoe UI', sans-serif;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        height: 100vh; /* Keeps the app height to the screen */
-    }
+        body {
+            background-color: var(--sia-bg);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-    header {
-        padding: 15px;
-        background: #000;
-        border-bottom: 2px solid var(--sia-blue);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: sticky; /* Keeps header at top */
-        top: 0;
-        z-index: 100;
-    }
+        header {
+            height: 100px;
+            padding: 0 20px;
+            background: #000;
+            border-bottom: 3px solid var(--sia-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
 
-    main {
-        flex: 1;
-        overflow-y: auto; /* This enables scrolling for the content! */
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
-    }
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 50px;
+        }
 
-    .screen { 
-        display: none; 
-        padding: 20px; 
-        padding-bottom: 60px; /* Space so the bottom button isn't cut off */
-    }
+        .screen { display: none; padding: 20px; }
+        .active { display: block; }
 
-    .active { display: block; }
+        .sia-card {
+            background: var(--sia-card);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #2d333b;
+        }
 
-    .sia-btn {
-        background: transparent;
-        border: 2px solid var(--sia-neon);
-        color: var(--sia-neon);
-        padding: 18px 25px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        cursor: pointer;
-        border-radius: 4px;
-        margin: 10px 0;
-        width: 100%; /* Better for touch targets */
-        font-size: 1rem;
-    }
+        .sia-btn {
+            background: transparent;
+            border: 2px solid var(--sia-neon);
+            color: var(--sia-neon);
+            padding: 15px 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 100%;
+            margin: 10px 0;
+        }
 
-    .sia-input {
-        background: #000;
-        border: 1px solid var(--sia-blue);
-        color: white;
-        padding: 15px;
-        font-size: 1.1rem;
-        margin-bottom: 15px;
-        border-radius: 4px;
-        box-sizing: border-box; /* Prevents input from being wider than screen */
-    }
+        .sia-input {
+            background: #000;
+            border: 1px solid var(--sia-blue);
+            color: white;
+            padding: 12px;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
 
-    .agent-pill {
-        background: var(--sia-blue);
-        padding: 8px 15px;
-        border-radius: 20px;
-        margin: 5px;
-        display: inline-block;
-        font-size: 0.9rem;
-    }
-</style>
+        .agent-pill {
+            display: inline-block;
+            background: var(--sia-blue);
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.8rem;
+        }
+
+        label { color: var(--sia-blue); font-size: 0.8rem; display: block; margin-bottom: 5px; }
+    </style>
 </head>
 <body>
 
-<header style="height: 100px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; background: #000; border-bottom: 3px solid var(--sia-blue);">
+<header>
     <div style="display: flex; align-items: center;">
         <div style="width: 45px; height: 45px; border: 3px solid var(--sia-neon); position: relative; transform: rotate(45deg); margin-right: 20px; display: flex; align-items: center; justify-content: center;">
              <div style="position: absolute; width: 100%; height: 2px; background: var(--sia-neon);"></div>
              <div style="position: absolute; height: 100%; width: 2px; background: var(--sia-neon);"></div>
         </div>
         <div style="line-height: 1.1;">
-            <span style="letter-spacing: 5px; font-weight: 900; font-size: 1.6rem; color: #fff;">SIA</span><br>
-            <span style="font-size: 0.65rem; color: var(--sia-blue); letter-spacing: 1px;">STRATEGIC INTELLIGENCE ARCHIVE</span>
+            <span style="letter-spacing: 5px; font-weight: 900; font-size: 1.6rem;">SIA</span><br>
+            <span style="font-size: 0.6rem; color: var(--sia-blue);">STRATEGIC INTELLIGENCE ARCHIVE</span>
         </div>
     </div>
-
-    <div id="header-actions" style="display: flex; gap: 10px;">
-        <button id="archive-btn" class="sia-btn" style="display:none; padding: 8px 12px; font-size: 0.7rem; border-color: var(--sia-blue); color: var(--sia-blue); margin: 0;" onclick="showScreen('archive-screen')">MY FILES</button>
-        <button id="logout-btn" class="sia-btn" style="display:none; padding: 8px 12px; font-size: 0.7rem; margin: 0; background: var(--sia-neon); color: #000;" onclick="secureLogout()">LOGOUT</button>
-        <i class="fas fa-cog" onclick="requestTeacherAccess()" style="color: #1a1f26; cursor: pointer; font-size: 0.8rem; align-self: flex-end;"></i>
+    <div id="session-controls" style="display:none; gap: 10px;">
+        <button onclick="showScreen('home-screen')" style="background:none; border:1px solid var(--sia-blue); color:var(--sia-blue); padding:5px 10px; cursor:pointer;">HOME</button>
+        <button onclick="secureLogout()" style="background:var(--sia-neon); color:#000; border:none; padding:5px 10px; cursor:pointer; font-weight:bold;">LOGOUT</button>
     </div>
+    <i class="fas fa-cog" onclick="requestTeacherAccess()" style="color: #1a1f26; cursor: pointer;"></i>
 </header>
-
-<section id="archive-screen" class="screen">
-    <h2 style="color: var(--sia-blue);">FIELD ARCHIVE</h2>
-    <p style="font-size: 0.8rem; color: gray;">Viewing successfully filed reports for this session.</p>
-    <div id="local-archive-list"></div>
-    <button class="sia-btn" onclick="showScreen('mission-screen')">BACK TO MISSIONS</button>
-</section>
 
 <main id="app-container">
     <section id="login-screen" class="screen active">
-        <h2 style="color: var(--sia-neon);">AGENT LOGIN</h2>
-        <p>Enter 4-digit PINs for your group.</p>
-        <div id="active-agents-list" style="margin-bottom:10px;"></div>
-        <input type="number" id="pin-input" class="sia-input" placeholder="0000">
-        <button class="sia-btn" onclick="addAgent()">Add Agent</button>
-        <button class="sia-btn" style="border-color:var(--sia-blue); color:var(--sia-blue);" onclick="proceedToMissions()">Start Operation</button>
+        <h2>AGENT REGISTRATION</h2>
+        <div id="active-agents-list" style="margin-bottom:15px;"></div>
+        <input type="number" id="agent-id-input" class="sia-input" placeholder="Enter 4-Digit Agent Code">
+        <button class="sia-btn" onclick="registerAgent()">Add Agent to Team</button>
+        <button class="sia-btn" onclick="startOperation()" style="border-color:var(--sia-blue); color:var(--sia-blue);">Begin Operation</button>
     </section>
 
-    <section id="mission-screen" class="screen">
-        <h2>AVAILABLE MISSIONS</h2>
-        <div id="mission-list"></div>
-    </section>
-
-    <section id="terminal-screen" class="screen">
-        <h2 id="current-mission-title">DATA LOG</h2>
-        
-        <div id="attribute-inputs" class="sia-card" style="background: var(--sia-card); padding: 15px; border-radius: 8px;">
-            </div>
-        
-        <div id="reasoning-section" style="margin-top: 20px;">
-            <h3>INTELLIGENCE REPORT</h3>
-            
-            <p id="prompt-conclusion" style="margin-bottom:5px; color: var(--sia-blue); font-weight:bold;"></p>
-            <select id="box-conclusion" class="sia-input" style="width:100%"></select>
-
-            <label>BECAUSE...</label>
-            <textarea id="box-because" class="sia-input" style="width:100%; height:60px;" placeholder="Evidence..."></textarea>
-            
-            <label>BUT...</label>
-            <textarea id="box-but" class="sia-input" style="width:100%; height:60px;" placeholder="Conflict..."></textarea>
-            
-            <label>SO...</label>
-            <textarea id="box-so" class="sia-input" style="width:100%; height:60px;" placeholder="Final Verdict..."></textarea>
+    <section id="home-screen" class="screen">
+        <h2>COMMAND HUB</h2>
+        <div class="sia-card">
+            <button class="sia-btn" onclick="renderMissionHub()">FIELD MISSIONS</button>
+            <button class="sia-btn" onclick="renderPolygonArchiveGrid()">POLYGON FILES</button>
         </div>
+    </section>
 
-        <button id="submit-btn" class="sia-btn" style="width:100%; margin-top:20px;" onclick="submitMission()">FILE REPORT TO COMMAND</button>
-        <button class="sia-btn" style="border:none; color:gray;" onclick="showScreen('mission-screen')">CANCEL MISSION</button>
+    <section id="mission-hub" class="screen">
+        <h2>ACTIVE MISSIONS</h2>
+        <div id="active-mission-list"></div>
+        <button class="sia-btn" onclick="showScreen('home-screen')" style="border:none; color:gray;">BACK</button>
+    </section>
+
+    <section id="mission-entry" class="screen">
+        <h2 id="entry-title">DATA ENTRY</h2>
+        <div id="polygon-entry-list"></div>
+        <button class="sia-btn" onclick="submitMissionBatch()">FILE MISSION REPORT</button>
+    </section>
+
+    <section id="polygon-archive" class="screen">
+        <h2>POLYGON INTELLIGENCE</h2>
+        <div id="polygon-archive-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"></div>
+    </section>
+
+    <section id="polygon-detail-screen" class="screen">
+        <h2 id="detail-polygon-name">SPECIMEN DATA</h2>
+        <div id="polygon-history"></div>
+        <button class="sia-btn" onclick="showScreen('polygon-archive')">BACK TO ARCHIVE</button>
+    </section>
+
+    <section id="teacher-screen" class="screen">
+        <h2>COMMANDER CONSOLE</h2>
+        <div class="sia-card">
+            <label>Release Mission:</label>
+            <select id="mission-release-select" class="sia-input"></select>
+            <button class="sia-btn" onclick="releaseMission()">AUTHORIZE RELEASE</button>
+        </div>
+        <div id="live-data-feed"></div>
+        <button class="sia-btn" onclick="showScreen('login-screen')">LOGOUT CONSOLE</button>
     </section>
 </main>
 
 <script type="module" src="index.js"></script>
-
 </body>
 </html>
