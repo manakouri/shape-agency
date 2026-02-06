@@ -97,6 +97,17 @@
             <select id="mission-release-select" class="sia-input"></select>
             <button class="sia-btn" onclick="releaseMission()">AUTHORIZE RELEASE</button>
         </div>
+        <div class="sia-card">
+    <h3>AGENT ROSTER MANAGEMENT</h3>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <input type="text" id="new-agent-name" class="sia-input" placeholder="First Name" style="margin:0;">
+        <input type="number" id="new-agent-code" class="sia-input" placeholder="4-Digit Code" style="margin:0;">
+    </div>
+    <button class="sia-btn" onclick="createNewAgent()">REGISTER NEW AGENT</button>
+    
+    <div id="roster-list" style="margin-top: 20px; border-top: 1px solid #333; padding-top: 10px;">
+        </div>
+</div>
     </section>
 </main>
 
