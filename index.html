@@ -91,26 +91,39 @@
     </section>
 
     <section id="teacher-screen" class="screen">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
         <h2>COMMANDER CONSOLE</h2>
-        <div class="sia-card">
-            <label>RELEASE MISSION TO FIELD</label>
-            <select id="mission-release-select" class="sia-input"></select>
-            <button class="sia-btn" onclick="releaseMission()">AUTHORIZE RELEASE</button>
-        </div>
-        <div id="live-data-feed" style="margin-top:30px;">
-        </div>
-        <div class="sia-card">
-    <h3>AGENT ROSTER MANAGEMENT</h3>
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-        <input type="text" id="new-agent-name" class="sia-input" placeholder="First Name" style="margin:0;">
-        <input type="number" id="new-agent-code" class="sia-input" placeholder="4-Digit Code" style="margin:0;">
+        <button class="sia-btn" onclick="staffLogout()" style="width:auto; padding:5px 15px; border-color:red; color:red;">LOGOUT STAFF</button>
     </div>
-    <button class="sia-btn" onclick="createNewAgent()">REGISTER NEW AGENT</button>
-    
-    <div id="roster-list" style="margin-top: 20px; border-top: 1px solid #333; padding-top: 10px;">
+
+    <div class="sia-card">
+        <label>SYSTEM BROADCAST: RELEASE ACTIVE MISSION</label>
+        <div style="display:flex; gap:10px;">
+            <select id="mission-release-select" class="sia-input" style="margin:0;"></select>
+            <button class="sia-btn" onclick="releaseMission()" style="margin:0; width:auto;">AUTHORIZE</button>
         </div>
-</div>
-    </section>
+    </div>
+
+    <div class="sia-card">
+        <h3>AGENT ROSTER</h3>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="text" id="new-agent-name" class="sia-input" placeholder="First Name" style="margin:0;">
+            <input type="number" id="new-agent-code" class="sia-input" placeholder="4-Digit Code" style="margin:0;">
+            <button class="sia-btn" onclick="createNewAgent()" style="margin:0; width:auto;">ADD</button>
+        </div>
+        <div id="roster-list" style="max-height:150px; overflow-y:auto; font-size:0.8rem; background:#000; padding:10px;"></div>
+    </div>
+
+    <h3>FIELD INTELLIGENCE EXPLORER</h3>
+    <div id="teacher-mission-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        </div>
+
+    <div id="submission-ledger-overlay" style="display:none; margin-top:20px;" class="sia-card">
+        <h3 id="ledger-title" style="color:var(--sia-neon)">MISSION LEDGER</h3>
+        <div id="ledger-content"></div>
+        <button class="sia-btn" onclick="document.getElementById('submission-ledger-overlay').style.display='none'">CLOSE LEDGER</button>
+    </div>
+</section>
 </main>
 
 <script type="module" src="index.js"></script>
