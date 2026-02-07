@@ -27,20 +27,33 @@
 
 <header>
     <div style="display: flex; align-items: center;">
-        <div style="width: 45px; height: 45px; border: 3px solid var(--sia-neon); position: relative; transform: rotate(45deg); margin-right: 20px; display: flex; align-items: center; justify-content: center;">
+        <div class="logo-icon" onclick="showScreen('home-screen')" style="cursor:pointer; width: 45px; height: 45px; border: 3px solid var(--sia-neon); position: relative; transform: rotate(45deg); margin-right: 20px; display: flex; align-items: center; justify-content: center;">
              <div style="position: absolute; width: 100%; height: 2px; background: var(--sia-neon);"></div>
              <div style="position: absolute; height: 100%; width: 2px; background: var(--sia-neon);"></div>
         </div>
         <div style="line-height: 1.1;">
-            <span class="logo-text" style="font-size: 1.6rem; color: #fff;">SIA</span><br>
+            <span class="logo-text">SIA</span><br>
             <span style="font-size: 0.6rem; color: var(--sia-blue);">STRATEGIC INTELLIGENCE ARCHIVE</span>
         </div>
     </div>
-    <div id="session-controls" style="display:none; gap: 10px;">
+    <div id="session-controls" style="display:none;">
         <button onclick="showScreen('home-screen')" class="sia-btn" style="width:auto; padding: 5px 15px; border-color:var(--sia-blue); color:var(--sia-blue);">HOME</button>
-        <button onclick="secureLogout()" class="sia-btn" style="width:auto; padding: 5px 15px; background:var(--sia-neon); color:#000;">LOGOUT</button>
     </div>
 </header>
+
+<section id="polygon-archive" class="screen">
+    <h2>POLYGON ARCHIVE</h2>
+    <div id="archive-access-lock" class="sia-card">
+        <label>ENTER AGENT CODE TO DECRYPT RECORDS</label>
+        <input type="number" id="archive-access-id" class="sia-input" placeholder="4-Digit ID">
+        <button class="sia-btn" onclick="unlockArchive()">ACCESS DATA</button>
+    </div>
+    <div id="archive-display" style="display:none;">
+        <p id="viewing-as-label" style="font-size:0.7rem; color:var(--sia-neon);"></p>
+        <div id="polygon-archive-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"></div>
+        <button class="sia-btn" onclick="relockArchive()" style="border-color:gray; color:gray;">LOGOUT OF ARCHIVE</button>
+    </div>
+</section>
 
 <main>
     <section id="login-screen" class="screen active">
