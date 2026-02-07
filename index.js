@@ -16,37 +16,34 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// --- FULLY VERIFIED VALIDATION MASTER DATA ---
+// --- MASTER VALIDATION REGISTRY (VERIFIED AGAINST S.I.A DATA) ---
 const validationRegistry = {
-    // Mission 1: Counting Vertices [cite: 6, 10]
-    "1": { "1": 3, "2": 4, "3": 4, "4": 5, "5": 6, "6": 6, "7": 7, "8": 10, "9": 10, "10": 12 }, 
-    
-    // Mission 3: Parallel Pairs [cite: 6, 10]
-    "3": { "1": 0, "2": 1, "3": 2, "4": 0, "5": 3, "6": 2, "7": 0, "8": 0, "9": 0, "10": 1 }, 
-    
-    // Mission 4: Right Angles [cite: 6, 10]
-    "4": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 }, 
-    
-    // Mission 5: Perpendicular Pairs [cite: 6, 10]
-    "5": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 }, 
-    
-    // Mission 6: Acute Angles [cite: 6, 10]
-    "6": { "1": 3, "2": 1, "3": 2, "4": 0, "5": 0, "6": 0, "7": 1, "8": 5, "9": 2, "10": 6 }, 
-    
-    // Mission 9: Reflex Angles [cite: 6, 10]
-    "9": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 1, "7": 0, "8": 5, "9": 0, "10": 2 }, 
-    
-    // Mission 10: Lines of Symmetry [cite: 6, 10]
-    "10": { "1": 3, "2": 0, "3": 0, "4": 0, "5": 6, "6": 0, "7": 0, "8": 1, "9": 0, "10": 0 }, 
-
-    // Deep Dive Vertex Validation (Missions 11-24) [cite: 8, 10]
-    "11": 3, "12": 3, "13": 3, "14": 4, "15": 4, "16": 4, "18": 5, 
-    "19": 6, "20": 7, "21": 9, "22": 10, "23": 11, "24": 12
+    "1": { "1": 3, "2": 4, "3": 4, "4": 5, "5": 6, "6": 6, "7": 7, "8": 10, "9": 10, "10": 12 },
+    "2": { // Mission 2: Side Lengths (Accepts comma separated values)
+        "1": [6, 6, 6],
+        "2": [6, 4.2, 6.4, 2.4],
+        "3": [6, 3.5, 6, 3.5],
+        "4": [4.8, 3.1, 3.6, 3.6, 4.3],
+        "5": [3.6, 3.6, 3.6, 3.6, 3.6, 3.6],
+        "6": [6, 1.8, 3, 3, 3, 4.8],
+        "7": [2.4, 2.4, 2.4, 2.4, 3.5, 3.5, 3.5],
+        "8": [3.5, 3.5, 4.9],
+        "9": [1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9],
+        "10": [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5]
+    },
+    "3": { "1": 0, "2": 1, "3": 2, "4": 0, "5": 3, "6": 2, "7": 0, "8": 0, "9": 0, "10": 1 },
+    "4": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
+    "5": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
+    "6": { "1": 3, "2": 1, "3": 2, "4": 0, "5": 0, "6": 0, "7": 1, "8": 5, "9": 2, "10": 6 },
+    "9": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 1, "7": 0, "8": 5, "9": 0, "10": 2 },
+    "10": { "1": 3, "2": 0, "3": 0, "4": 0, "5": 6, "6": 0, "7": 0, "8": 1, "9": 0, "10": 0 },
+    // Deep Dives (Min Vertices)
+    "11":3, "12":3, "13":3, "14":4, "15":4, "16":4, "18":5, "19":6, "20":7, "21":9, "22":10, "23":11, "24":12
 };
 
 const missionRegistry = {
     "1": { title: "Counting Vertices", type: "bulk", fields: [{id:"v", label:"Vertices", type:"number"}] },
-    "2": { title: "Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm)", type:"text"}] },
+    "2": { title: "Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm) - separate with commas", type:"text"}] },
     "3": { title: "Parallel Pairs", type: "bulk", fields: [{id:"para", label:"Parallel Pairs", type:"number"}] },
     "4": { title: "Right Angles", type: "bulk", fields: [{id:"right", label:"Right Angles", type:"number"}] },
     "5": { title: "Perpendicular Lines", type: "bulk", fields: [{id:"perp", label:"Perp. Pairs", type:"number"}] },
@@ -83,6 +80,7 @@ let loggedInAgents = [];
 let activeMissionId = 1;
 let currentArchiveAgent = null;
 
+// --- COMMON UI ---
 window.showScreen = (id) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -136,7 +134,7 @@ window.viewMissionSubmissions = async (mId) => {
     content.innerHTML = snap.empty ? "No data reported." : '';
     snap.forEach(docSnap => {
         const d = docSnap.data();
-        content.innerHTML += `<div class="sia-card"><b>Agents: ${d.agents.join(', ')}</b><br>${d.entries.map(e => `${e.polyId || 'Variant '+e.variant}: ${e.val}`).join(' | ')}</div>`;
+        content.innerHTML += `<div class="sia-card"><b>Agents: ${d.agents.join(', ')}</b><br>${d.entries.map(e => `${e.polyId || 'Var '+e.variant}: ${e.val}`).join(' | ')}</div>`;
     });
 };
 
@@ -159,7 +157,7 @@ async function loadRoster() {
 window.releaseMission = async () => {
     const val = document.getElementById('mission-release-select').value;
     await setDoc(doc(db, "system", "config"), { currentMission: parseInt(val) });
-    alert("Field Protocol Updated.");
+    alert("Protocol Broadcasted.");
 };
 
 // --- AGENT ACTIONS ---
@@ -202,99 +200,4 @@ window.openMission = (id) => {
         }
     } else {
         ['A', 'B', 'C'].forEach(v => {
-            container.innerHTML += `<div class="sia-card"><h3>Variant ${v}</h3>${deepFields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-variant="${v}" data-f="${f.id}">`).join('')}</div>`;
-        });
-        container.innerHTML += `<div class="sia-card"><textarea id="rep-b" class="sia-input" placeholder="BECAUSE..."></textarea><textarea id="rep-bt" class="sia-input" placeholder="BUT..."></textarea><textarea id="rep-s" class="sia-input" placeholder="SO..."></textarea></div>`;
-    }
-    showScreen('mission-entry');
-};
-
-// --- SUBMISSION WITH FULL VALIDATION ---
-window.submitMissionBatch = async () => {
-    const inputs = document.querySelectorAll('.m-in');
-    const mission = missionRegistry[activeMissionId];
-    let errors = [];
-
-    // Bulk Mission Validation (Missions 1, 3, 4, 5, 6, 9, 10)
-    if (validationRegistry[activeMissionId] && typeof validationRegistry[activeMissionId] === 'object') {
-        inputs.forEach(i => {
-            const polyId = i.dataset.poly;
-            const correctVal = validationRegistry[activeMissionId][polyId];
-            if (i.value && parseInt(i.value) !== correctVal) {
-                errors.push(`Polygon ${polyId}`);
-            }
-        });
-    }
-
-    // Deep Dive Vertex Validation (Missions 11-24)
-    if (validationRegistry[activeMissionId] && typeof validationRegistry[activeMissionId] === 'number') {
-        inputs.forEach(i => {
-            if (i.dataset.f === 'v' && i.value && parseInt(i.value) !== validationRegistry[activeMissionId]) {
-                errors.push(`Variant ${i.dataset.variant}`);
-            }
-        });
-    }
-
-    if (errors.length > 0) {
-        alert(`⚠️ INTEL DISCREPANCY:\nSatellite data suggests errors in: ${errors.join(', ')}.\n\nRe-verify these shapes immediately.`);
-        return;
-    }
-
-    const data = { missionId: activeMissionId, agents: loggedInAgents, timestamp: new Date(), entries: [] };
-    inputs.forEach(i => { if(i.value) data.entries.push({ polyId: i.dataset.poly || null, variant: i.dataset.variant || null, field: i.dataset.f, val: i.value }); });
-    if (mission.type === "deep") data.report = { b: document.getElementById('rep-b').value, bt: document.getElementById('rep-bt').value, s: document.getElementById('rep-s').value };
-    
-    await addDoc(collection(db, "submissions"), data);
-    alert("Intelligence Sealed.");
-    showScreen('home-screen');
-};
-
-// --- ARCHIVE LOGIC ---
-window.unlockArchive = () => {
-    const code = document.getElementById('archive-access-id').value;
-    if (loggedInAgents.includes(code)) {
-        currentArchiveAgent = code;
-        document.getElementById('archive-access-lock').style.display = 'none';
-        document.getElementById('archive-display').style.display = 'block';
-        document.getElementById('viewing-as-label').innerText = `DECRYPTING RECORDS FOR: ${code}`;
-        renderPolygonArchiveGrid();
-    } else { alert("ID NOT RECOGNIZED."); }
-};
-
-window.relockArchive = () => {
-    currentArchiveAgent = null;
-    document.getElementById('archive-access-lock').style.display = 'block';
-    document.getElementById('archive-display').style.display = 'none';
-};
-
-window.renderPolygonArchiveGrid = () => {
-    const grid = document.getElementById('polygon-archive-grid');
-    grid.innerHTML = '';
-    for (let i = 1; i <= 10; i++) {
-        const b = document.createElement('button');
-        b.className = 'sia-btn';
-        b.innerHTML = `POLYGON ${i}`;
-        b.onclick = () => window.viewPolygonDetail(i);
-        grid.appendChild(b);
-    }
-};
-
-window.viewPolygonDetail = async (id) => {
-    const hist = document.getElementById('polygon-history');
-    hist.innerHTML = "Scanning...";
-    const q = query(collection(db, "submissions"), where("agents", "array-contains", currentArchiveAgent));
-    const snap = await getDocs(q);
-    hist.innerHTML = '';
-    let found = false;
-    snap.forEach(docSnap => {
-        const d = docSnap.data();
-        d.entries.forEach(e => {
-            if (e.polyId == id) {
-                found = true;
-                hist.innerHTML += `<div class="sia-card"><b>M${d.missionId}: ${missionRegistry[d.missionId].title}</b><br>Result: ${e.val}</div>`;
-            }
-        });
-    });
-    if (!found) hist.innerHTML = "No record found.";
-    showScreen('polygon-detail-screen');
-};
+            container.innerHTML +=
