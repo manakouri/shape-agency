@@ -227,39 +227,58 @@ const renderMissionToggles = () => {
     `).join('');
 };
 
-// 2. Broadcast selected missions (Teacher Side)
-window.broadcastMissions = () => {
+// 1. Teacher: Send selected missions to Firebase
+window.broadcastMissions = async () => {
     const checkboxes = document.querySelectorAll('.mission-chk');
-    broadcastedMissionIds = Array.from(checkboxes)
+    const selectedIds = Array.from(checkboxes)
         .filter(chk => chk.checked)
         .map(chk => parseInt(chk.value));
     
-    alert(broadcastedMissionIds.length === 0 ? 
-        "HQ: All missions recalled." : 
-        `HQ: ${broadcastedMissionIds.length} Protocols Broadcasted.`);
+    try {
+        await setDoc(doc(db, "system", "state"), {
+            activeMissions: selectedIds,
+            lastUpdated: new Date()
+        });
+        alert("HQ: Mission Protocols Broadcasted to all terminals.");
+    } catch (e) {
+        console.error("Broadcast Error:", e);
+    }
 };
 
-// 3. Render the Student Mission Hub (Student Side)
+// 2. Student: Listen for live updates from Firebase
+const listenForMissions = () => {
+    onSnapshot(doc(db, "system", "state"), (snap) => {
+        if (snap.exists()) {
+            broadcastedMissionIds = snap.data().activeMissions || [];
+            // If the user is currently on the mission hub, refresh it automatically
+            if (document.getElementById('mission-hub').classList.contains('active')) {
+                window.renderMissionHub();
+            }
+        }
+    });
+};
+
+// 3. Updated Hub Renderer
 window.renderMissionHub = () => {
     const list = document.getElementById('active-mission-list');
     list.innerHTML = '';
 
-    if (broadcastedMissionIds.length === 0) {
+    if (!broadcastedMissionIds || broadcastedMissionIds.length === 0) {
         list.innerHTML = `
             <div class="sia-card" style="border-color: red; text-align: center;">
                 <h3 style="color: red;">NO ACTIVE MISSIONS</h3>
                 <p>Awaiting authorization from SIA Command.</p>
             </div>`;
     } else {
-        // Show a card for every mission you've checked in the teacher console
-        broadcastedMissionIds.forEach(id => {
+        broadcastedMissionIds.sort((a,b) => a - b).forEach(id => {
             const m = missionRegistry[id];
-            list.innerHTML += `
-                <div class="sia-card linked" onclick="window.openMission(${id})" style="margin-bottom: 10px;">
-                    <h3>MISSION ${id}</h3>
-                    <p>${m.title}</p>
-                    <p style="color: var(--sia-neon); font-size: 0.8rem;">PROTOCOL ACTIVE</p>
-                </div>`;
+            if (m) {
+                list.innerHTML += `
+                    <div class="sia-card linked" onclick="window.openMission(${id})" style="margin-bottom: 10px;">
+                        <h3>MISSION ${id}</h3>
+                        <p>${m.title}</p>
+                    </div>`;
+            }
         });
     }
     window.showScreen('mission-hub');
