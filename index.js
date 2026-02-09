@@ -289,6 +289,10 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         window.showScreen('teacher-screen');
         listenToRoster();
-        renderMissionToggles(); // This builds the checklist as soon as you log in
+        listenForMissions(); // Teacher sees live updates too
+        renderMissionToggles();
     }
 });
+
+// Add this at the very bottom of your index.js for students
+listenForMissions();
