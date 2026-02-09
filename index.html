@@ -40,16 +40,28 @@
         </section>
 
         <section id="home-screen" class="screen">
-            <h2>WELCOME, AGENTS</h2>
-            <div class="sia-card linked" onclick="window.renderMissionHub()">
-                <h3>ACTIVE MISSIONS</h3>
-                <p>Current field objectives from HQ.</p>
-            </div>
-            <div class="sia-card disabled">
-                <h3>POLYGON ARCHIVE</h3>
-                <p>Access restricted to Level 2 Agents.</p>
-            </div>
-        </section>
+    <h2 id="welcome-msg">WELCOME, AGENT</h2>
+    <div class="sia-card linked" onclick="window.renderMissionHub()">
+        <h3>ACTIVE MISSIONS</h3>
+        <p>Current field objectives from HQ.</p>
+    </div>
+    <div class="sia-card linked" onclick="window.openArchiveMenu()">
+        <h3>POLYGON ARCHIVE</h3>
+        <p>View decrypted data for all artifacts.</p>
+    </div>
+</section>
+
+<section id="archive-menu" class="screen">
+    <h2>POLYGON ARCHIVE</h2>
+    <div id="polygon-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        </div>
+</section>
+
+<section id="polygon-detail" class="screen">
+    <h2 id="detail-title">POLYGON X</h2>
+    <div id="detail-content"></div>
+    <button class="sia-btn" onclick="window.showScreen('archive-menu')">BACK TO ARCHIVE</button>
+</section>
 
         <section id="mission-hub" class="screen">
             <h2>MISSION HUB</h2>
