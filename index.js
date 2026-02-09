@@ -99,25 +99,83 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-window.registerAgent = () => {
-    // Check both potential input fields (Landing screen vs Teacher screen)
-    const loginInput = document.getElementById('agent-id-input');
-    const teacherInput = document.getElementById('teacher-agent-id-input');
-    const input = loginInput || teacherInput;
-    
-    const val = input.value;
-    if (val.length === 4) {
-        if (!loggedInAgents.includes(val)) {
-            loggedInAgents.push(val);
-            // Update the display on whichever screen is active
-            const list = document.getElementById('active-agents-list') || document.getElementById('teacher-agents-list');
-            if (list) {
-                list.innerHTML += `<span class="agent-pill">AGENT ${val}</span> `;
+// --- AGENT DATABASE SYSTEM ---
+
+// 1. Authorise a new agent (Teacher Only)
+window.authoriseAgent = async () => {
+    const nameInput = document.getElementById('new-agent-name');
+    const codeInput = document.getElementById('new-agent-code');
+    const name = nameInput.value.trim();
+    const code = codeInput.value.trim();
+
+    if (name && code.length === 4) {
+        try {
+            // Save to Firebase collection "agents"
+            await setDoc(doc(db, "agents", code), {
+                agentName: name,
+                agentCode: code,
+                dateAdded: new Date()
+            });
+            nameInput.value = '';
+            codeInput.value = '';
+            console.log(`Agent ${name} Authorised.`);
+        } catch (e) {
+            console.error("Database Error:", e);
+        }
+    } else {
+        alert("INVALID DATA: Ensure name is present and code is 4 digits.");
+    }
+};
+
+// 2. Load the Roster (Real-time Listener)
+const listenToRoster = () => {
+    const rosterDiv = document.getElementById('roster-list');
+    onSnapshot(collection(db, "agents"), (snapshot) => {
+        rosterDiv.innerHTML = '';
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            rosterDiv.innerHTML += `
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #1a1a1a; padding:5px 0;">
+                    <span style="color:var(--sia-neon)">${data.agentName}</span>
+                    <span style="color:var(--sia-blue)">[ CODE: ${data.agentCode} ]</span>
+                </div>`;
+        });
+    });
+};
+
+// 3. Agent Login (Using the database)
+window.registerAgent = async () => {
+    const input = document.getElementById('agent-id-input');
+    const code = input.value.trim();
+
+    if (code.length === 4) {
+        // Look up the code in the database
+        const q = query(collection(db, "agents"), where("agentCode", "==", code));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            const agentData = querySnapshot.docs[0].data();
+            if (!loggedInAgents.includes(code)) {
+                loggedInAgents.push(code);
+                document.getElementById('active-agents-list').innerHTML += `
+                    <span class="agent-pill">AGENT ${agentData.agentName}</span> `;
+                document.getElementById('welcome-msg').innerText = `WELCOME, AGENT ${agentData.agentName}`;
             }
+        } else {
+            alert("ACCESS DENIED: Invalid Agent Code.");
         }
     }
     input.value = '';
 };
+
+// --- AUTH STATE OBSERVER ---
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        window.showScreen('teacher-screen');
+        listenToRoster(); // Start the live roster feed
+        // ... (rest of your mission release logic)
+    }
+});
 
 window.startOperation = () => {
     if (loggedInAgents.length > 0) {
