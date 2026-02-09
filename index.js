@@ -137,11 +137,28 @@ window.renderMissionHub = () => {
 
 window.openMission = (id) => {
     const m = missionRegistry[id];
-    document.getElementById('polygon-entry-list').innerHTML = Array.from({length: 10}, (_, i) => `
-        <div class="sia-card">
-            <h3>POLYGON ${i+1}</h3>
-            ${m.fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i+1}">`).join('')}
-        </div>`).join('');
+    const container = document.getElementById('polygon-entry-list');
+    container.innerHTML = '';
+
+    if (m.type === "bulk") {
+        // Original logic for Missions 1-10
+        for (let i = 1; i <= 10; i++) {
+            container.innerHTML += `
+                <div class="sia-card">
+                    <h3>POLYGON ${i}</h3>
+                    ${m.fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i}" data-f="${f.id}">`).join('')}
+                </div>`;
+        }
+    } else if (m.type === "deep") {
+        // New logic for Missions 11-24 (Focus on 3 specific shapes)
+        for (let i = 1; i <= 3; i++) {
+            container.innerHTML += `
+                <div class="sia-card">
+                    <h3>${m.target} ARTIFACT ${i}</h3>
+                    ${deepFields.map(f => `<label>${f.label}</label><input class="${f.type === 'text' ? 'sia-input' : 'sia-input m-in'}" data-poly="${i}" data-f="${f.id}">`).join('')}
+                </div>`;
+        }
+    }
     window.showScreen('mission-entry');
 };
 
