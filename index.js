@@ -154,11 +154,16 @@ window.submitMissionBatch = async () => {
         if (!val) return;
         missionData[`p${i.dataset.poly}-${i.dataset.f}`] = val;
 
-        if (activeMissionId === 2) {
-            const student = val.split(',').map(v => parseFloat(v.trim())).sort();
-            const correct = [...master[i.dataset.poly]].sort();
-            if (student.length !== correct.length || student.some((v, idx) => Math.abs(v - correct[idx]) > 0.2)) errors.push(`P${i.dataset.poly}`);
-        } else if (missionRegistry[activeMissionId].type === "bulk") {
+       if (activeMissionId === 2) {
+    // Split by comma, convert to numbers, and sort to compare regardless of order
+    const student = val.split(',').map(v => parseFloat(v.trim())).sort();
+    const correct = [...master[i.dataset.poly]].sort();
+
+    // Check if the number of sides matches and if each side is within 0.1cm (1mm) tolerance
+    if (student.length !== correct.length || student.some((v, idx) => Math.abs(v - correct[idx]) > 0.1)) {
+        errors.push(`P${i.dataset.poly}`);
+    }
+} else if (missionRegistry[activeMissionId].type === "bulk") {
             if (master && parseInt(val) !== master[i.dataset.poly]) errors.push(`P${i.dataset.poly}`);
         }
     });
