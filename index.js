@@ -16,21 +16,16 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// --- DATA REGISTRY (VERIFIED MISSIONS 1-10) ---
-// --- MASTER VALIDATION REGISTRY (VERIFIED AGAINST S.I.A DATA) ---
+// --- MASTER VALIDATION REGISTRY ---
 const validationRegistry = {
     "1": { "1": 3, "2": 4, "3": 4, "4": 5, "5": 6, "6": 6, "7": 7, "8": 10, "9": 10, "10": 12 },
-    "2": { // Mission 2: Side Lengths (Accepts comma separated values)
-        "1": [6, 6, 6],
-        "2": [6, 4.2, 6.4, 2.4],
-        "3": [6, 3.5, 6, 3.5],
-        "4": [4.8, 3.1, 3.6, 3.6, 4.3],
-        "5": [3.6, 3.6, 3.6, 3.6, 3.6, 3.6],
-        "6": [6, 1.8, 3, 3, 3, 4.8],
-        "7": [2.4, 2.4, 2.4, 2.4, 3.5, 3.5, 3.5],
-        "8": [3.5, 3.5, 4.9],
-        "9": [1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9],
-        "10": [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5]
+    "2": { 
+        "1": [6, 6, 6], "2": [6, 4.2, 6.4, 2.4], "3": [6, 3.5, 6, 3.5], 
+        "4": [4.8, 3.1, 3.6, 3.6, 4.3], "5": [3.6, 3.6, 3.6, 3.6, 3.6, 3.6],
+        "6": [6, 1.8, 3, 3, 3, 4.8], "7": [3.6, 3.1, 3.1, 3, 2.6, 3, 2],
+        "8": [2.2, 2.2, 1.9, 2.6, 2.8, 2.8, 2.6, 1.9, 2.2, 2.2],
+        "9": [2.5, 3.1, 2.2, 3.1, 2.6, 1.9, 1.9, 2.6, 2.8, 1.3],
+        "10": [3.7, 3.7, 2.7, 3.1, 1.7, 2.5, 2.5, 1.7, 3.1, 2.1, 1.3, 0.7]
     },
     "3": { "1": 0, "2": 1, "3": 2, "4": 0, "5": 3, "6": 2, "7": 0, "8": 0, "9": 0, "10": 1 },
     "4": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
@@ -38,191 +33,104 @@ const validationRegistry = {
     "6": { "1": 3, "2": 1, "3": 2, "4": 0, "5": 0, "6": 0, "7": 1, "8": 5, "9": 2, "10": 6 },
     "9": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 1, "7": 0, "8": 5, "9": 0, "10": 2 },
     "10": { "1": 3, "2": 0, "3": 0, "4": 0, "5": 6, "6": 0, "7": 0, "8": 1, "9": 0, "10": 0 },
-    // Deep Dives (Min Vertices)
-    "11":3, "12":3, "13":3, "14":4, "15":4, "16":4, "18":5, "19":6, "20":7, "21":9, "22":10, "23":11, "24":12
+    "11":3, "12":3, "13":3, "14":4, "15":4, "16":4, "17":3, "18":5, "19":6, "20":7, "21":9, "22":10, "23":11, "24":12
 };
 
 const missionRegistry = {
-    "1": { title: "Counting Vertices", type: "bulk", fields: [{id:"v", label:"Vertices", type:"number"}] },
-    "2": { title: "Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm) - separate with commas", type:"text"}] },
-    "3": { title: "Parallel Pairs", type: "bulk", fields: [{id:"para", label:"Parallel Pairs", type:"number"}] },
-    "4": { title: "Right Angles", type: "bulk", fields: [{id:"right", label:"Right Angles", type:"number"}] },
-    "5": { title: "Perpendicular Lines", type: "bulk", fields: [{id:"perp", label:"Perp. Pairs", type:"number"}] },
-    "6": { title: "Acute Angles", type: "bulk", fields: [{id:"acute", label:"Acute Angles", type:"number"}] },
-    "7": { title: "Naming Angles (0-180°)", type: "bulk", fields: [{id:"est", label:"Estimate", type:"number"}] },
-    "8": { title: "Exact Measurements", type: "bulk", fields: [{id:"exact", label:"Degrees (°)", type:"number"}] },
-    "9": { title: "Reflex Angles", type: "bulk", fields: [{id:"reflex", label:"Reflex Angles", type:"number"}] },
-    "10": { title: "Lines of Symmetry", type: "bulk", fields: [{id:"symm", label:"Symmetry Lines", type:"number"}] },
-    "11": { title: "Equilateral Triangles", type: "deep", target: "Triangle" },
-    "12": { title: "Isosceles Triangles", type: "deep", target: "Triangle" },
-    "13": { title: "Scalene Triangles", type: "deep", target: "Triangle" },
-    "14": { title: "Rectangles", type: "deep", target: "Quadrilateral" },
-    "15": { title: "Squares", type: "deep", target: "Quadrilateral" },
-    "16": { title: "Rhombus", type: "deep", target: "Quadrilateral" },
-    "17": { title: "Regularity Standard", type: "deep", target: "Polygon" },
-    "18": { title: "Pentagon", type: "deep", target: "Pentagon" },
-    "19": { title: "Hexagon", type: "deep", target: "Hexagon" },
-    "20": { title: "Septagon", type: "deep", target: "Septagon" },
-    "21": { title: "Nonagon", type: "deep", target: "Nonagon" },
-    "22": { title: "Decagon", type: "deep", target: "Decagon" },
-    "23": { title: "Hendecagon", type: "deep", target: "Hendecagon" },
-    "24": { title: "Dodecagon", type: "deep", target: "Dodecagon" }
+    "1": { title: "M01: Vertex Scan", type: "bulk", fields: [{id:"v", label:"Vertices"}] },
+    "2": { title: "M02: Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm)"}] },
+    "3": { title: "M03: Parallel Pairs", type: "bulk", fields: [{id:"para", label:"Parallel Pairs"}] },
+    "4": { title: "M04: Right Angles", type: "bulk", fields: [{id:"right", label:"Right Angles"}] },
+    "5": { title: "M05: Perpendicular Lines", type: "bulk", fields: [{id:"perp", label:"Perp. Pairs"}] },
+    "6": { title: "M06: Acute Angles", type: "bulk", fields: [{id:"acute", label:"Acute Angles"}] },
+    "7": { title: "M07: Angle Naming", type: "bulk", fields: [{id:"name", label:"Type (Acute/Obtuse/etc)"}] },
+    "8": { title: "M08: Exact Angles", type: "bulk", fields: [{id:"deg", label:"Degrees (°)"}] },
+    "9": { title: "M09: Reflex Angles", type: "bulk", fields: [{id:"reflex", label:"Reflex Angles"}] },
+    "10": { title: "M10: Symmetry", type: "bulk", fields: [{id:"symm", label:"Symmetry Lines"}] },
+    "11": { title: "M11: Equilateral", type: "deep", target: "Triangle" },
+    "12": { title: "M12: Isosceles", type: "deep", target: "Triangle" },
+    "13": { title: "M13: Scalene", type: "deep", target: "Triangle" },
+    "14": { title: "M14: Rectangles", type: "deep", target: "Quadrilateral" },
+    "15": { title: "M15: Squares", type: "deep", target: "Quadrilateral" },
+    "16": { title: "M16: Rhombus", type: "deep", target: "Quadrilateral" },
+    "17": { title: "M17: Regularity", type: "deep", target: "Polygon" },
+    "18": { title: "M18: Pentagon", type: "deep", target: "Pentagon" },
+    "19": { title: "M19: Hexagon", type: "deep", target: "Hexagon" },
+    "20": { title: "M20: Septagon", type: "deep", target: "Septagon" },
+    "21": { title: "M21: Nonagon", type: "deep", target: "Nonagon" },
+    "22": { title: "M22: Decagon", type: "deep", target: "Decagon" },
+    "23": { title: "M23: Hendecagon", type: "deep", target: "Hendecagon" },
+    "24": { title: "M24: Dodecagon", type: "deep", target: "Dodecagon" }
 };
 
 const deepFields = [
     {id:"v", label:"Vertices", type:"number"},
     {id:"ang", label:"Angle Data", type:"text"},
     {id:"par", label:"Parallel Pairs", type:"number"},
-    {id:"per", label:"Perp. Pairs", type:"number"},
     {id:"sym", label:"Symmetry Lines", type:"number"}
 ];
 
 let loggedInAgents = [];
 let activeMissionId = 1;
 
-// --- EXPOSE TO HTML ---
-window.showScreen = (id) => {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-};
-
-window.teacherLogin = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
-window.staffLogout = () => auth.signOut().then(() => location.reload());
-
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        window.showScreen('teacher-screen');
-        const sel = document.getElementById('mission-release-select');
-        if (sel) {
-            sel.innerHTML = Object.keys(missionRegistry).map(k => `<option value="${k}">${missionRegistry[k].title}</option>`).join('');
-        }
-    }
-});
-
-// --- AGENT DATABASE SYSTEM ---
-
-// 1. Authorise a new agent (Teacher Only)
+// --- DATABASE & AUTH ---
 window.authoriseAgent = async () => {
-    const nameInput = document.getElementById('new-agent-name');
-    const codeInput = document.getElementById('new-agent-code');
-    const name = nameInput.value.trim();
-    const code = codeInput.value.trim();
-
+    const name = document.getElementById('new-agent-name').value.trim();
+    const code = document.getElementById('new-agent-code').value.trim();
     if (name && code.length === 4) {
-        try {
-            // Save to Firebase collection "agents"
-            await setDoc(doc(db, "agents", code), {
-                agentName: name,
-                agentCode: code,
-                dateAdded: new Date()
-            });
-            nameInput.value = '';
-            codeInput.value = '';
-            console.log(`Agent ${name} Authorised.`);
-        } catch (e) {
-            console.error("Database Error:", e);
-        }
-    } else {
-        alert("INVALID DATA: Ensure name is present and code is 4 digits.");
+        await setDoc(doc(db, "agents", code), { agentName: name, agentCode: code });
+        document.getElementById('new-agent-name').value = '';
+        document.getElementById('new-agent-code').value = '';
     }
 };
 
-// 2. Load the Roster (Real-time Listener)
 const listenToRoster = () => {
-    const rosterDiv = document.getElementById('roster-list');
-    onSnapshot(collection(db, "agents"), (snapshot) => {
-        rosterDiv.innerHTML = '';
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            rosterDiv.innerHTML += `
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #1a1a1a; padding:5px 0;">
-                    <span style="color:var(--sia-neon)">${data.agentName}</span>
-                    <span style="color:var(--sia-blue)">[ CODE: ${data.agentCode} ]</span>
-                </div>`;
-        });
+    onSnapshot(collection(db, "agents"), (snap) => {
+        const roster = document.getElementById('roster-list');
+        if (roster) {
+            roster.innerHTML = '';
+            snap.forEach(d => {
+                const a = d.data();
+                roster.innerHTML += `<div style="padding:5px; border-bottom:1px solid #222; font-size:0.8rem;">${a.agentName} <span style="color:var(--sia-blue)">[${a.agentCode}]</span></div>`;
+            });
+        }
     });
 };
 
-// 3. Agent Login (Using the database)
 window.registerAgent = async () => {
-    const input = document.getElementById('agent-id-input');
-    const code = input.value.trim();
-
+    const code = document.getElementById('agent-id-input').value.trim();
     if (code.length === 4) {
-        // Look up the code in the database
         const q = query(collection(db, "agents"), where("agentCode", "==", code));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            const agentData = querySnapshot.docs[0].data();
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+            const data = snap.docs[0].data();
             if (!loggedInAgents.includes(code)) {
                 loggedInAgents.push(code);
-                document.getElementById('active-agents-list').innerHTML += `
-                    <span class="agent-pill">AGENT ${agentData.agentName}</span> `;
-                document.getElementById('welcome-msg').innerText = `WELCOME, AGENT ${agentData.agentName}`;
+                document.getElementById('active-agents-list').innerHTML += `<span class="agent-pill">AGENT ${data.agentName}</span> `;
             }
-        } else {
-            alert("ACCESS DENIED: Invalid Agent Code.");
-        }
+        } else { alert("ACCESS DENIED: Code Unknown."); }
     }
-    input.value = '';
+    document.getElementById('agent-id-input').value = '';
 };
 
-// --- AUTH STATE OBSERVER ---
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        window.showScreen('teacher-screen');
-        listenToRoster(); // Start the live roster feed
-        // ... (rest of your mission release logic)
-    }
-});
-
-window.startOperation = () => {
-    if (loggedInAgents.length > 0) {
-        document.getElementById('session-controls').style.display = 'flex';
-        window.showScreen('home-screen');
-    }
-};
-
-window.renderMissionHub = () => {
-    document.getElementById('active-mission-list').innerHTML = `
-        <div class="sia-card linked" onclick="window.openMission(${activeMissionId})">
-            <h3>${missionRegistry[activeMissionId].title}</h3>
-            <p>ENTER DATA ARCHIVE</p>
-        </div>`;
-    window.showScreen('mission-hub');
-};
-
+// --- MISSION LOGIC ---
 window.openMission = (id) => {
     const m = missionRegistry[id];
     const container = document.getElementById('polygon-entry-list');
     container.innerHTML = '';
+    const isBulk = m.type === "bulk";
+    const count = isBulk ? 10 : 3;
+    const fields = isBulk ? m.fields : deepFields;
 
-    if (m.type === "bulk") {
-        // Original logic for Missions 1-10
-        for (let i = 1; i <= 10; i++) {
-            container.innerHTML += `
-                <div class="sia-card">
-                    <h3>POLYGON ${i}</h3>
-                    ${m.fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i}" data-f="${f.id}">`).join('')}
-                </div>`;
-        }
-    } else if (m.type === "deep") {
-        // New logic for Missions 11-24 (Focus on 3 specific shapes)
-        for (let i = 1; i <= 3; i++) {
-            container.innerHTML += `
-                <div class="sia-card">
-                    <h3>${m.target} ARTIFACT ${i}</h3>
-                    ${deepFields.map(f => `<label>${f.label}</label><input class="${f.type === 'text' ? 'sia-input' : 'sia-input m-in'}" data-poly="${i}" data-f="${f.id}">`).join('')}
-                </div>`;
-        }
+    for (let i = 1; i <= count; i++) {
+        container.innerHTML += `
+            <div class="sia-card">
+                <h3>${isBulk ? 'POLYGON' : m.target} ${i}</h3>
+                ${fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i}" data-f="${f.id}">`).join('')}
+                ${!isBulk ? `<label>SIA Field Notes (Shared Traits)</label><textarea class="sia-input"></textarea>` : ''}
+            </div>`;
     }
     window.showScreen('mission-entry');
-};
-
-window.releaseMission = () => {
-    activeMissionId = parseInt(document.getElementById('mission-release-select').value);
-    alert("HQ: Mission Broadast Updated.");
 };
 
 window.submitMissionBatch = async () => {
@@ -233,16 +141,46 @@ window.submitMissionBatch = async () => {
     inputs.forEach(i => {
         if (!i.value) return;
         const polyId = i.dataset.poly;
+        
         if (activeMissionId === 2) {
             const student = i.value.split(',').map(v => parseFloat(v.trim())).sort();
             const correct = [...master[polyId]].sort();
             if (student.length !== correct.length || student.some((v, idx) => Math.abs(v - correct[idx]) > 0.2)) errors.push(`P${polyId}`);
-        } else if (parseInt(i.value) !== master[polyId]) {
-            errors.push(`P${polyId}`);
+        } else if (missionRegistry[activeMissionId].type === "bulk") {
+             if (master && parseInt(i.value) !== master[polyId]) errors.push(`P${polyId}`);
+        } else {
+             // Deep dive validation (e.g., minimum vertices check)
+             if (i.dataset.f === 'v' && parseInt(i.value) < master) errors.push(`${missionRegistry[activeMissionId].target} ${polyId}`);
         }
     });
 
-    if (errors.length > 0) return alert(`SATELLITE WARNING: Discrepancy in ${errors.join(', ')}`);
-    alert("INTELLIGENCE SEALED.");
+    if (errors.length > 0) return alert(`SATELLITE WARNING: Discrepancies in ${errors.join(', ')}`);
+    alert("INTELLIGENCE SEALED. Report transmitted.");
     window.showScreen('home-screen');
 };
+
+// --- NAVIGATION & UTILS ---
+window.showScreen = (id) => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+};
+window.teacherLogin = () => signInWithPopup(auth, provider);
+window.staffLogout = () => auth.signOut().then(() => location.reload());
+window.releaseMission = () => {
+    activeMissionId = parseInt(document.getElementById('mission-release-select').value);
+    alert(`HQ: Broadcast updated to ${missionRegistry[activeMissionId].title}`);
+};
+window.renderMissionHub = () => {
+    document.getElementById('active-mission-list').innerHTML = `<div class="sia-card linked" onclick="window.openMission(${activeMissionId})"><h3>MISSION ${activeMissionId}</h3><p>${missionRegistry[activeMissionId].title}</p></div>`;
+    window.showScreen('mission-hub');
+};
+window.startOperation = () => loggedInAgents.length > 0 ? (document.getElementById('session-controls').style.display='flex', window.showScreen('home-screen')) : alert("IDENTIFY AGENTS");
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        window.showScreen('teacher-screen');
+        listenToRoster();
+        const sel = document.getElementById('mission-release-select');
+        if (sel) sel.innerHTML = Object.keys(missionRegistry).map(k => `<option value="${k}">${missionRegistry[k].title}</option>`).join('');
+    }
+});
