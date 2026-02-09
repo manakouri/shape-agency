@@ -1,50 +1,81 @@
+/* --- S.I.A. GLOBAL STYLES --- */
 :root {
-    --sia-bg: #0a0a0b;
-    --sia-card: #141417;
-    --sia-neon: #00f2ff;
-    --sia-blue: #0077ff;
-    --sia-text: #e0e0e0;
-    --sia-border: #2a2a2e;
+    --sia-neon: #00ff9d;       /* Primary Green */
+    --sia-blue: #00d4ff;       /* Intelligence Blue */
+    --sia-bg: #050505;         /* Deep Black */
+    --sia-card-bg: #111;       /* Card Background */
+    --sia-border: #222;        /* Subtle Border */
+    --sia-text: #e0e0e0;       /* Off-White Text */
+}
+
+* {
+    box-sizing: border-box;
 }
 
 body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--sia-bg);
     color: var(--sia-text);
-    font-family: 'Roboto Mono', monospace;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+    overflow-x: hidden;
 }
 
+/* --- HEADER & NAVIGATION --- */
 header {
-    padding: 15px 25px;
-    background: #000;
-    border-bottom: 2px solid var(--sia-neon);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.9);
+    border-bottom: 2px solid var(--sia-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-.logo-text {
-    font-family: 'Orbitron', sans-serif;
-    color: var(--sia-neon);
-    font-weight: 700;
-    letter-spacing: 5px;
+#session-controls {
+    display: flex;
+    gap: 10px;
 }
 
-.screen { display: none; padding: 20px; overflow-y: auto; flex: 1; }
-.screen.active { display: block; }
+/* --- UI SCREENS --- */
+.screen {
+    display: none;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    animation: fadeIn 0.4s ease-out;
+}
 
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- S.I.A. CARDS & INPUTS --- */
 .sia-card {
-    background: var(--sia-card);
+    background: var(--sia-card-bg);
     border: 1px solid var(--sia-border);
     padding: 20px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
 }
 
-.linked { border-left: 4px solid var(--sia-neon); cursor: pointer; }
-.disabled { opacity: 0.5; cursor: not-allowed; }
+.sia-card.linked {
+    cursor: pointer;
+    transition: 0.3s;
+    border-left: 4px solid var(--sia-blue);
+}
+
+.sia-card.linked:hover {
+    background: #1a1a1a;
+    border-color: var(--sia-neon);
+}
 
 .sia-input {
     width: 100%;
@@ -53,21 +84,86 @@ header {
     color: var(--sia-neon);
     padding: 12px;
     margin: 10px 0;
-    box-sizing: border-box;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    border-radius: 4px;
 }
 
+.sia-input:focus {
+    outline: none;
+    border-color: var(--sia-blue);
+}
+
+/* --- BUTTONS --- */
 .sia-btn {
     width: 100%;
+    padding: 15px;
+    margin-top: 10px;
     background: transparent;
     border: 1px solid var(--sia-neon);
     color: var(--sia-neon);
-    padding: 12px;
     font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    letter-spacing: 2px;
     cursor: pointer;
-    margin-top: 10px;
+    transition: 0.3s;
+    text-transform: uppercase;
 }
 
-.sia-btn:hover { background: var(--sia-neon); color: #000; }
-.action-btn { border-color: var(--sia-blue); color: var(--sia-blue); }
-.submit-btn { position: sticky; bottom: 0; background: var(--sia-bg); }
-.logout-btn { width: auto; color: red; border-color: red; }
+.sia-btn:hover {
+    background: var(--sia-neon);
+    color: #000;
+}
+
+.action-btn {
+    border-color: var(--sia-blue);
+    color: var(--sia-blue);
+}
+
+.action-btn:hover {
+    background: var(--sia-blue);
+    color: #000;
+}
+
+/* --- AGENT ELEMENTS --- */
+.agent-pill {
+    display: inline-block;
+    background: #002211;
+    color: var(--sia-neon);
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--sia-neon);
+    font-size: 0.75rem;
+    margin: 5px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+h2, h3 {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 3px;
+    margin-top: 0;
+}
+
+h2 { color: var(--sia-neon); }
+h3 { color: var(--sia-blue); font-size: 1rem; }
+
+label {
+    font-size: 0.7rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- SCROLLBARS --- */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #000;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--sia-border);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--sia-blue);
+}
