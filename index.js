@@ -113,6 +113,22 @@ window.registerAgent = async () => {
     document.getElementById('agent-id-input').value = '';
 };
 
+window.agentLogout = () => {
+    if (confirm("SIA COMMAND: Are you sure you want to end this session? All unsaved data will be lost.")) {
+        // Clear the local session data
+        loggedInAgents = [];
+        
+        // Reset the UI elements
+        document.getElementById('active-agents-list').innerHTML = '';
+        document.getElementById('session-controls').style.display = 'none';
+        
+        // Return to the main entry terminal
+        window.showScreen('login-screen');
+        
+        console.log("Session Terminated. Agent identities cleared.");
+    }
+};
+
 // --- MISSION LOGIC ---
 // --- DATA SYNC SYSTEM ---
 
