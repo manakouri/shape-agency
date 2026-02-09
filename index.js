@@ -92,9 +92,27 @@ onSnapshot(doc(db, "system", "config"), (snapshot) => {
     if (snapshot.exists()) activeMissionId = snapshot.data().currentMission;
 });
 
-window.teacherLogin = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
-window.staffLogout = () => auth.signOut().then(() => location.reload());
+// --- TEACHER & AUTH SYSTEM ---
 
+// This function is triggered by the button in your HTML
+window.teacherLogin = () => {
+    signInWithPopup(auth, provider)
+        .then(() => {
+            console.log("SIA Commander Authenticated");
+        })
+        .catch(e => {
+            alert("Access Denied: " + e.message);
+        });
+};
+
+// This function clears the session and resets the terminal
+window.staffLogout = () => {
+    auth.signOut().then(() => {
+        location.reload();
+    }).catch(e => console.error("Logout Error", e));
+};
+
+// This listener watches for the login and automatically switches screens
 onAuthStateChanged(auth, (user) => {
     if (user) {
         loadRoster();
@@ -106,6 +124,7 @@ onAuthStateChanged(auth, (user) => {
                 sel.innerHTML += `<option value="${k}">M${k}: ${missionRegistry[k].title}</option>`;
             });
         }
+        // This is the line that physically moves you to the Commander Console
         showScreen('teacher-screen');
     }
 });
