@@ -1,0 +1,73 @@
+:root {
+    --sia-bg: #0a0a0b;
+    --sia-card: #141417;
+    --sia-neon: #00f2ff;
+    --sia-blue: #0077ff;
+    --sia-text: #e0e0e0;
+    --sia-border: #2a2a2e;
+}
+
+body {
+    background-color: var(--sia-bg);
+    color: var(--sia-text);
+    font-family: 'Roboto Mono', monospace;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    padding: 15px 25px;
+    background: #000;
+    border-bottom: 2px solid var(--sia-neon);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-text {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--sia-neon);
+    font-weight: 700;
+    letter-spacing: 5px;
+}
+
+.screen { display: none; padding: 20px; overflow-y: auto; flex: 1; }
+.screen.active { display: block; }
+
+.sia-card {
+    background: var(--sia-card);
+    border: 1px solid var(--sia-border);
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.linked { border-left: 4px solid var(--sia-neon); cursor: pointer; }
+.disabled { opacity: 0.5; cursor: not-allowed; }
+
+.sia-input {
+    width: 100%;
+    background: #000;
+    border: 1px solid var(--sia-border);
+    color: var(--sia-neon);
+    padding: 12px;
+    margin: 10px 0;
+    box-sizing: border-box;
+}
+
+.sia-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--sia-neon);
+    color: var(--sia-neon);
+    padding: 12px;
+    font-family: 'Orbitron', sans-serif;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.sia-btn:hover { background: var(--sia-neon); color: #000; }
+.action-btn { border-color: var(--sia-blue); color: var(--sia-blue); }
+.submit-btn { position: sticky; bottom: 0; background: var(--sia-bg); }
+.logout-btn { width: auto; color: red; border-color: red; }
