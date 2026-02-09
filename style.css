@@ -1,3 +1,20 @@
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --sia-neon: #00ff9d;
+        --sia-blue: #00d4ff;
+        --sia-border: #333;
+    }
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid var(--sia-border);
+        background: rgba(0,0,0,0.8);
+    }
+</style>
+
 :root {
     --sia-bg: #0a0a0b;
     --sia-card: #141417;
