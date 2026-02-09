@@ -154,18 +154,29 @@ window.submitMissionBatch = async () => {
         if (!val) return;
         missionData[`p${i.dataset.poly}-${i.dataset.f}`] = val;
 
-       if (activeMissionId === 2) {
-    // Split by comma, convert to numbers, and sort to compare regardless of order
+     // Inside the inputs.forEach loop...
+
+if (activeMissionId === 2) {
+    // MISSION 02: Ruler Logic (Tolerance + Commas)
     const student = val.split(',').map(v => parseFloat(v.trim())).sort();
     const correct = [...master[i.dataset.poly]].sort();
 
-    // Check if the number of sides matches and if each side is within 0.1cm (1mm) tolerance
     if (student.length !== correct.length || student.some((v, idx) => Math.abs(v - correct[idx]) > 0.1)) {
         errors.push(`P${i.dataset.poly}`);
     }
-} else if (missionRegistry[activeMissionId].type === "bulk") {
-            if (master && parseInt(val) !== master[i.dataset.poly]) errors.push(`P${i.dataset.poly}`);
-        }
+} 
+else if (missionRegistry[activeMissionId].type === "bulk") {
+    // MISSIONS 1, 3-10: Simple Whole Number Logic
+    if (master && parseInt(val) !== master[i.dataset.poly]) {
+        errors.push(`P${i.dataset.poly}`);
+    }
+}
+else {
+    // DEEP DIVES 11-24: Minimum Requirement Logic
+    if (i.dataset.f === 'v' && parseInt(val) < master) {
+        errors.push(`${missionRegistry[activeMissionId].target} ${i.dataset.poly}`);
+    }
+}
     });
 
     if (errors.length > 0) return alert(`SATELLITE WARNING: Review ${[...new Set(errors)].join(', ')}`);
