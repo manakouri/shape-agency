@@ -39,12 +39,17 @@
             </div>
         </section>
 
-        <section id="home-screen" class="screen">
-    <h2 id="welcome-msg">WELCOME, AGENT</h2>
+       <section id="home-screen" class="screen">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 id="welcome-msg">WELCOME, AGENT</h2>
+        <button class="sia-btn" style="width:auto; padding:5px 15px; border-color:red; color:red; margin-top:0;" onclick="window.agentLogout()">ABANDON MISSION</button>
+    </div>
+    
     <div class="sia-card linked" onclick="window.renderMissionHub()">
         <h3>ACTIVE MISSIONS</h3>
         <p>Current field objectives from HQ.</p>
     </div>
+    
     <div class="sia-card linked" onclick="window.openArchiveMenu()">
         <h3>POLYGON ARCHIVE</h3>
         <p>View decrypted data for all artifacts.</p>
