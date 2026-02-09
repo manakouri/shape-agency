@@ -114,9 +114,31 @@ window.registerAgent = async () => {
 };
 
 // --- MISSION LOGIC ---
-window.openMission = (id) => {
+// --- DATA SYNC SYSTEM ---
+
+// Generate a unique key for this group of agents and this mission
+const getSessionKey = () => {
+    const sortedCodes = [...loggedInAgents].sort().join("-");
+    return `M${activeMissionId}-G-${sortedCodes}`;
+};
+
+window.openMission = async (id) => {
+    activeMissionId = id;
     const m = missionRegistry[id];
     const container = document.getElementById('polygon-entry-list');
+    container.innerHTML = '<p style="text-align:center; color:var(--sia-neon);">DECRYPTING ARCHIVE...</p>';
+
+    // 1. Fetch existing data from Firebase
+    const sessionKey = getSessionKey();
+    const docRef = doc(db, "mission_reports", sessionKey);
+    const docSnap = await getDocs(query(collection(db, "mission_reports"), where("sessionKey", "==", sessionKey)));
+    
+    let existingData = {};
+    if (!docSnap.empty) {
+        existingData = docSnap.docs[0].data().values || {};
+    }
+
+    // 2. Build the UI
     container.innerHTML = '';
     const isBulk = m.type === "bulk";
     const count = isBulk ? 10 : 3;
@@ -126,8 +148,16 @@ window.openMission = (id) => {
         container.innerHTML += `
             <div class="sia-card">
                 <h3>${isBulk ? 'POLYGON' : m.target} ${i}</h3>
-                ${fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i}" data-f="${f.id}">`).join('')}
-                ${!isBulk ? `<label>SIA Field Notes (Shared Traits)</label><textarea class="sia-input"></textarea>` : ''}
+                ${fields.map(f => {
+                    const val = existingData[`p${i}-${f.id}`] || '';
+                    return `
+                        <label>${f.label}</label>
+                        <input class="sia-input m-in" 
+                               data-poly="${i}" 
+                               data-f="${f.id}" 
+                               value="${val}" 
+                               placeholder="Entry Pending...">`;
+                }).join('')}
             </div>`;
     }
     window.showScreen('mission-entry');
@@ -135,30 +165,53 @@ window.openMission = (id) => {
 
 window.submitMissionBatch = async () => {
     const inputs = document.querySelectorAll('.m-in');
+    const missionData = {};
     let errors = [];
     const master = validationRegistry[activeMissionId];
 
+    // Collect data and validate
     inputs.forEach(i => {
-        if (!i.value) return;
+        const val = i.value.trim();
         const polyId = i.dataset.poly;
-        
+        const fieldId = i.dataset.f;
+        if (!val) return;
+
+        missionData[`p${polyId}-${fieldId}`] = val;
+
+        // Validation Logic
         if (activeMissionId === 2) {
-            const student = i.value.split(',').map(v => parseFloat(v.trim())).sort();
+            const student = val.split(',').map(v => parseFloat(v.trim())).sort();
             const correct = [...master[polyId]].sort();
-            if (student.length !== correct.length || student.some((v, idx) => Math.abs(v - correct[idx]) > 0.2)) errors.push(`P${polyId}`);
+            if (student.length !== correct.length || student.some((v, idx) => Math.abs(v - correct[idx]) > 0.2)) {
+                errors.push(`P${polyId}`);
+            }
         } else if (missionRegistry[activeMissionId].type === "bulk") {
-             if (master && parseInt(i.value) !== master[polyId]) errors.push(`P${polyId}`);
-        } else {
-             // Deep dive validation (e.g., minimum vertices check)
-             if (i.dataset.f === 'v' && parseInt(i.value) < master) errors.push(`${missionRegistry[activeMissionId].target} ${polyId}`);
+            if (master && parseInt(val) !== master[polyId]) errors.push(`P${polyId}`);
         }
     });
 
-    if (errors.length > 0) return alert(`SATELLITE WARNING: Discrepancies in ${errors.join(', ')}`);
-    alert("INTELLIGENCE SEALED. Report transmitted.");
-    window.showScreen('home-screen');
-};
+    if (errors.length > 0) {
+        alert(`⚠️ DISCREPANCY DETECTED: Review data for ${[...new Set(errors)].join(', ')}`);
+        return;
+    }
 
+    // Save to Firebase
+    const sessionKey = getSessionKey();
+    try {
+        await setDoc(doc(db, "mission_reports", sessionKey), {
+            sessionKey: sessionKey,
+            missionId: activeMissionId,
+            agents: loggedInAgents,
+            values: missionData,
+            lastUpdated: new Date()
+        });
+        alert("INTELLIGENCE UPLOADED: Archive updated.");
+        window.showScreen('home-screen');
+    } catch (e) {
+        console.error("Upload Error:", e);
+        alert("UPLOAD FAILED: Check Satellite Link (Firebase Rules).");
+    }
+};
 // --- NAVIGATION & UTILS ---
 window.showScreen = (id) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
