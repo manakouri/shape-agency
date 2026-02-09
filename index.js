@@ -100,11 +100,20 @@ onAuthStateChanged(auth, (user) => {
 });
 
 window.registerAgent = () => {
-    const input = document.getElementById('agent-id-input');
-    if (input.value.length === 4) {
-        if (!loggedInAgents.includes(input.value)) {
-            loggedInAgents.push(input.value);
-            document.getElementById('active-agents-list').innerHTML += `<span class="agent-pill">AGENT ${input.value}</span> `;
+    // Check both potential input fields (Landing screen vs Teacher screen)
+    const loginInput = document.getElementById('agent-id-input');
+    const teacherInput = document.getElementById('teacher-agent-id-input');
+    const input = loginInput || teacherInput;
+    
+    const val = input.value;
+    if (val.length === 4) {
+        if (!loggedInAgents.includes(val)) {
+            loggedInAgents.push(val);
+            // Update the display on whichever screen is active
+            const list = document.getElementById('active-agents-list') || document.getElementById('teacher-agents-list');
+            if (list) {
+                list.innerHTML += `<span class="agent-pill">AGENT ${val}</span> `;
+            }
         }
     }
     input.value = '';
