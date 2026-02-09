@@ -56,23 +56,23 @@
 </section>
 
 <main>
-    <section id="login-screen" class="screen active">
-        <h2 style="color: var(--sia-neon);">TERMINAL ACCESS</h2>
-        <div class="sia-card">
-            <label>STAFF GATEWAY</label>
-            <button class="sia-btn" onclick="teacherLogin()" style="border-color: #fff; color: #fff;">
-                <i class="fab fa-google"></i> TEACHER LOGIN
-            </button>
-        </div>
-        <div class="sia-card">
-            <label>AGENT REGISTRATION</label>
-            <div id="active-agents-list" style="margin-bottom:10px;"></div>
-            <input type="number" id="agent-id-input" class="sia-input" placeholder="4-DIGIT AGENT CODE">
-            <button class="sia-btn" onclick="registerAgent()">IDENTIFY AGENT</button>
-            <button class="sia-btn" onclick="startOperation()" style="border-color:var(--sia-blue); color:var(--sia-blue);">BEGIN OPERATION</button>
-        </div>
-    </section>
-
+   <section id="login-screen" class="screen active">
+    <h2 style="color: var(--sia-neon);">TERMINAL ACCESS</h2>
+    <div class="sia-card">
+        <label>STAFF GATEWAY</label>
+        <button class="sia-btn" onclick="window.teacherLogin()" style="border-color: #fff; color: #fff;">
+            <i class="fab fa-google"></i> TEACHER LOGIN
+        </button>
+    </div>
+    <div class="sia-card">
+        <label>AGENT REGISTRATION</label>
+        <div id="active-agents-list" style="margin-bottom:10px;"></div>
+        <input type="number" id="agent-id-input" class="sia-input" placeholder="4-DIGIT AGENT CODE">
+        <button class="sia-btn" onclick="window.registerAgent()">IDENTIFY AGENT</button>
+        <button class="sia-btn" onclick="window.startOperation()" style="border-color:var(--sia-blue); color:var(--sia-blue);">BEGIN OPERATION</button>
+    </div>
+</section>
+    
     <section id="home-screen" class="screen">
         <h2>COMMAND HUB</h2>
         <div class="sia-card">
