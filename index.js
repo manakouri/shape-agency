@@ -16,7 +16,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// --- MASTER VALIDATION REGISTRY ---
+// --- DATA REGISTRY (VERIFIED MISSIONS 1-10) ---
 const validationRegistry = {
     "1": { "1": 3, "2": 4, "3": 4, "4": 5, "5": 6, "6": 6, "7": 7, "8": 10, "9": 10, "10": 12 },
     "2": {
@@ -31,99 +31,79 @@ const validationRegistry = {
     "4": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
     "5": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
     "6": { "1": 3, "2": 1, "3": 2, "4": 0, "5": 0, "6": 0, "7": 1, "8": 5, "9": 2, "10": 6 },
-    "9": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 1, "7": 0, "8": 5, "9": 0, "10": 2 },
     "10": { "1": 3, "2": 0, "3": 0, "4": 0, "5": 6, "6": 0, "7": 0, "8": 1, "9": 0, "10": 0 }
 };
 
 const missionRegistry = {
-    "1": { title: "Counting Vertices", type: "bulk", fields: [{id:"v", label:"Vertices", type:"number"}] },
-    "2": { title: "Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm) - Use commas", type:"text"}] },
-    "3": { title: "Parallel Pairs", type: "bulk", fields: [{id:"para", label:"Parallel Pairs", type:"number"}] },
-    "4": { title: "Right Angles", type: "bulk", fields: [{id:"right", label:"Right Angles", type:"number"}] },
-    "5": { title: "Perpendicular Lines", type: "bulk", fields: [{id:"perp", label:"Perp. Pairs", type:"number"}] },
-    "6": { title: "Acute Angles", type: "bulk", fields: [{id:"acute", label:"Acute Angles", type:"number"}] },
-    "10": { title: "Lines of Symmetry", type: "bulk", fields: [{id:"symm", label:"Symmetry Lines", type:"number"}] }
+    "1": { title: "Mission 01: Vertex Scan", fields: [{id:"v", label:"Vertices"}] },
+    "2": { title: "Mission 02: Side Lengths", fields: [{id:"len", label:"Length (cm) - separate with commas"}] },
+    "3": { title: "Mission 03: Parallel Pairs", fields: [{id:"para", label:"Parallel Pairs"}] },
+    "4": { title: "Mission 04: Right Angles", fields: [{id:"right", label:"Right Angles"}] },
+    "10": { title: "Mission 10: Symmetry", fields: [{id:"symm", label:"Symmetry Lines"}] }
 };
 
 let loggedInAgents = [];
 let activeMissionId = 1;
 
-// --- GLOBAL NAVIGATION ---
+// --- EXPOSE TO HTML ---
 window.showScreen = (id) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
 };
 
-// --- STAFF LOGIN LOGIC ---
-window.teacherLogin = function() {
-    signInWithPopup(auth, provider)
-        .then(() => console.log("Commander Logged In"))
-        .catch(e => alert("SIA Auth Error: " + e.message));
-};
-
-window.staffLogout = () => {
-    auth.signOut().then(() => location.reload());
-};
+window.teacherLogin = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
+window.staffLogout = () => auth.signOut().then(() => location.reload());
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
         window.showScreen('teacher-screen');
         const sel = document.getElementById('mission-release-select');
         if (sel) {
-            sel.innerHTML = '';
-            Object.keys(missionRegistry).forEach(k => {
-                sel.innerHTML += `<option value="${k}">M${k}: ${missionRegistry[k].title}</option>`;
-            });
+            sel.innerHTML = Object.keys(missionRegistry).map(k => `<option value="${k}">${missionRegistry[k].title}</option>`).join('');
         }
     }
 });
 
-// --- AGENT LOGIC ---
-window.registerAgent = async () => {
-    const val = document.getElementById('agent-id-input').value;
-    if (val.length === 4) {
-        if (!loggedInAgents.includes(val)) {
-            loggedInAgents.push(val);
-            const p = document.createElement('span');
-            p.className = 'agent-pill';
-            p.innerText = 'AGENT ' + val;
-            document.getElementById('active-agents-list').appendChild(p);
+window.registerAgent = () => {
+    const input = document.getElementById('agent-id-input');
+    if (input.value.length === 4) {
+        if (!loggedInAgents.includes(input.value)) {
+            loggedInAgents.push(input.value);
+            document.getElementById('active-agents-list').innerHTML += `<span class="agent-pill">AGENT ${input.value}</span> `;
         }
     }
-    document.getElementById('agent-id-input').value = '';
+    input.value = '';
 };
 
 window.startOperation = () => {
     if (loggedInAgents.length > 0) {
         document.getElementById('session-controls').style.display = 'flex';
         window.showScreen('home-screen');
-    } else {
-        alert("IDENTIFY AGENTS TO PROCEED.");
     }
 };
 
 window.renderMissionHub = () => {
-    const list = document.getElementById('active-mission-list');
-    list.innerHTML = `
-        <div class="sia-card" onclick="window.openMission(${activeMissionId})" style="cursor:pointer; border-color:var(--sia-neon);">
-            <h3>MISSION ${activeMissionId}</h3>
-            <p>${missionRegistry[activeMissionId].title}</p>
+    document.getElementById('active-mission-list').innerHTML = `
+        <div class="sia-card linked" onclick="window.openMission(${activeMissionId})">
+            <h3>${missionRegistry[activeMissionId].title}</h3>
+            <p>ENTER DATA ARCHIVE</p>
         </div>`;
     window.showScreen('mission-hub');
 };
 
 window.openMission = (id) => {
     const m = missionRegistry[id];
-    const container = document.getElementById('polygon-entry-list');
-    container.innerHTML = '';
-    for (let i = 1; i <= 10; i++) {
-        container.innerHTML += `
-            <div class="sia-card">
-                <h3>POLYGON ${i}</h3>
-                ${m.fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i}" data-f="${f.id}">`).join('')}
-            </div>`;
-    }
+    document.getElementById('polygon-entry-list').innerHTML = Array.from({length: 10}, (_, i) => `
+        <div class="sia-card">
+            <h3>POLYGON ${i+1}</h3>
+            ${m.fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i+1}">`).join('')}
+        </div>`).join('');
     window.showScreen('mission-entry');
+};
+
+window.releaseMission = () => {
+    activeMissionId = parseInt(document.getElementById('mission-release-select').value);
+    alert("HQ: Mission Broadast Updated.");
 };
 
 window.submitMissionBatch = async () => {
@@ -134,27 +114,16 @@ window.submitMissionBatch = async () => {
     inputs.forEach(i => {
         if (!i.value) return;
         const polyId = i.dataset.poly;
-        
         if (activeMissionId === 2) {
-            const studentVals = i.value.split(',').map(v => parseFloat(v.trim())).sort();
-            const correctVals = [...master[polyId]].sort();
-            if (studentVals.length !== correctVals.length) {
-                errors.push(`Polygon ${polyId}`);
-            } else {
-                for(let j=0; j<correctVals.length; j++) {
-                    if (Math.abs(studentVals[j] - correctVals[j]) > 0.2) errors.push(`Polygon ${polyId}`);
-                }
-            }
-        } else if (master && parseInt(i.value) !== master[polyId]) {
-            errors.push(`Polygon ${polyId}`);
+            const student = i.value.split(',').map(v => parseFloat(v.trim())).sort();
+            const correct = [...master[polyId]].sort();
+            if (student.length !== correct.length || student.some((v, idx) => Math.abs(v - correct[idx]) > 0.2)) errors.push(`P${polyId}`);
+        } else if (parseInt(i.value) !== master[polyId]) {
+            errors.push(`P${polyId}`);
         }
     });
 
-    if (errors.length > 0) {
-        alert(`⚠️ INTEL DISCREPANCY in: ${errors.join(', ')}. Re-examine the artifacts.`);
-        return;
-    }
-
-    alert("INTELLIGENCE SEALED. Report transmitted to HQ.");
+    if (errors.length > 0) return alert(`SATELLITE WARNING: Discrepancy in ${errors.join(', ')}`);
+    alert("INTELLIGENCE SEALED.");
     window.showScreen('home-screen');
 };
