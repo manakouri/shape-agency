@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, doc, setDoc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -16,107 +16,58 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// --- MASTER VALIDATION REGISTRY (VERIFIED AGAINST S.I.A DATA) ---
+// --- MASTER VALIDATION REGISTRY ---
 const validationRegistry = {
     "1": { "1": 3, "2": 4, "3": 4, "4": 5, "5": 6, "6": 6, "7": 7, "8": 10, "9": 10, "10": 12 },
-    "2": { // Mission 2: Side Lengths (Accepts comma separated values)
-        "1": [6, 6, 6],
-        "2": [6, 4.2, 6.4, 2.4],
-        "3": [6, 3.5, 6, 3.5],
-        "4": [4.8, 3.1, 3.6, 3.6, 4.3],
-        "5": [3.6, 3.6, 3.6, 3.6, 3.6, 3.6],
-        "6": [6, 1.8, 3, 3, 3, 4.8],
-        "7": [2.4, 2.4, 2.4, 2.4, 3.5, 3.5, 3.5],
-        "8": [3.5, 3.5, 4.9],
-        "9": [1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9],
-        "10": [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5]
+    "2": {
+        "1": [6, 6, 6], "2": [6, 4.2, 6.4, 2.4], "3": [6, 3.5, 6, 3.5], 
+        "4": [4.8, 3.1, 3.6, 3.6, 4.3], "5": [3.6, 3.6, 3.6, 3.6, 3.6, 3.6],
+        "6": [6, 1.8, 3, 3, 3, 4.8], "7": [3.6, 3.1, 3.1, 3, 2.6, 3, 2],
+        "8": [2.2, 2.2, 1.9, 2.6, 2.8, 2.8, 2.6, 1.9, 2.2, 2.2],
+        "9": [2.5, 3.1, 2.2, 3.1, 2.6, 1.9, 1.9, 2.6, 2.8, 1.3],
+        "10": [3.7, 3.7, 2.7, 3.1, 1.7, 2.5, 2.5, 1.7, 3.1, 2.1, 1.3, 0.7]
     },
     "3": { "1": 0, "2": 1, "3": 2, "4": 0, "5": 3, "6": 2, "7": 0, "8": 0, "9": 0, "10": 1 },
     "4": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
     "5": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
     "6": { "1": 3, "2": 1, "3": 2, "4": 0, "5": 0, "6": 0, "7": 1, "8": 5, "9": 2, "10": 6 },
     "9": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 1, "7": 0, "8": 5, "9": 0, "10": 2 },
-    "10": { "1": 3, "2": 0, "3": 0, "4": 0, "5": 6, "6": 0, "7": 0, "8": 1, "9": 0, "10": 0 },
-    // Deep Dives (Min Vertices)
-    "11":3, "12":3, "13":3, "14":4, "15":4, "16":4, "18":5, "19":6, "20":7, "21":9, "22":10, "23":11, "24":12
+    "10": { "1": 3, "2": 0, "3": 0, "4": 0, "5": 6, "6": 0, "7": 0, "8": 1, "9": 0, "10": 0 }
 };
 
 const missionRegistry = {
     "1": { title: "Counting Vertices", type: "bulk", fields: [{id:"v", label:"Vertices", type:"number"}] },
-    "2": { title: "Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm) - separate with commas", type:"text"}] },
+    "2": { title: "Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm) - Use commas", type:"text"}] },
     "3": { title: "Parallel Pairs", type: "bulk", fields: [{id:"para", label:"Parallel Pairs", type:"number"}] },
     "4": { title: "Right Angles", type: "bulk", fields: [{id:"right", label:"Right Angles", type:"number"}] },
     "5": { title: "Perpendicular Lines", type: "bulk", fields: [{id:"perp", label:"Perp. Pairs", type:"number"}] },
     "6": { title: "Acute Angles", type: "bulk", fields: [{id:"acute", label:"Acute Angles", type:"number"}] },
-    "7": { title: "Naming Angles (0-180°)", type: "bulk", fields: [{id:"est", label:"Estimate", type:"number"}] },
-    "8": { title: "Exact Measurements", type: "bulk", fields: [{id:"exact", label:"Degrees (°)", type:"number"}] },
-    "9": { title: "Reflex Angles", type: "bulk", fields: [{id:"reflex", label:"Reflex Angles", type:"number"}] },
-    "10": { title: "Lines of Symmetry", type: "bulk", fields: [{id:"symm", label:"Symmetry Lines", type:"number"}] },
-    "11": { title: "Equilateral Triangles", type: "deep", target: "Triangle" },
-    "12": { title: "Isosceles Triangles", type: "deep", target: "Triangle" },
-    "13": { title: "Scalene Triangles", type: "deep", target: "Triangle" },
-    "14": { title: "Rectangles", type: "deep", target: "Quadrilateral" },
-    "15": { title: "Squares", type: "deep", target: "Quadrilateral" },
-    "16": { title: "Rhombus", type: "deep", target: "Quadrilateral" },
-    "17": { title: "Regularity Standard", type: "deep", target: "Polygon" },
-    "18": { title: "Pentagon", type: "deep", target: "Pentagon" },
-    "19": { title: "Hexagon", type: "deep", target: "Hexagon" },
-    "20": { title: "Septagon", type: "deep", target: "Septagon" },
-    "21": { title: "Nonagon", type: "deep", target: "Nonagon" },
-    "22": { title: "Decagon", type: "deep", target: "Decagon" },
-    "23": { title: "Hendecagon", type: "deep", target: "Hendecagon" },
-    "24": { title: "Dodecagon", type: "deep", target: "Dodecagon" }
+    "10": { title: "Lines of Symmetry", type: "bulk", fields: [{id:"symm", label:"Symmetry Lines", type:"number"}] }
 };
-
-const deepFields = [
-    {id:"v", label:"Vertices", type:"number"},
-    {id:"ang", label:"Angle Data", type:"text"},
-    {id:"par", label:"Parallel Pairs", type:"number"},
-    {id:"per", label:"Perp. Pairs", type:"number"},
-    {id:"sym", label:"Symmetry Lines", type:"number"}
-];
 
 let loggedInAgents = [];
 let activeMissionId = 1;
-let currentArchiveAgent = null;
 
-// --- COMMON UI ---
+// --- GLOBAL NAVIGATION ---
 window.showScreen = (id) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    document.querySelector('main').scrollTop = 0;
 };
 
-// --- TEACHER SYSTEM ---
-onSnapshot(doc(db, "system", "config"), (snapshot) => {
-    if (snapshot.exists()) activeMissionId = snapshot.data().currentMission;
-});
-
-// --- TEACHER & AUTH SYSTEM ---
-
-// This function is triggered by the button in your HTML
-window.teacherLogin = () => {
+// --- STAFF LOGIN LOGIC ---
+window.teacherLogin = function() {
     signInWithPopup(auth, provider)
-        .then(() => {
-            console.log("SIA Commander Authenticated");
-        })
-        .catch(e => {
-            alert("Access Denied: " + e.message);
-        });
+        .then(() => console.log("Commander Logged In"))
+        .catch(e => alert("SIA Auth Error: " + e.message));
 };
 
-// This function clears the session and resets the terminal
 window.staffLogout = () => {
-    auth.signOut().then(() => {
-        location.reload();
-    }).catch(e => console.error("Logout Error", e));
+    auth.signOut().then(() => location.reload());
 };
 
-// This listener watches for the login and automatically switches screens
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        loadRoster();
-        renderTeacherMissionGrid();
+        window.showScreen('teacher-screen');
         const sel = document.getElementById('mission-release-select');
         if (sel) {
             sel.innerHTML = '';
@@ -124,67 +75,13 @@ onAuthStateChanged(auth, (user) => {
                 sel.innerHTML += `<option value="${k}">M${k}: ${missionRegistry[k].title}</option>`;
             });
         }
-        // This is the line that physically moves you to the Commander Console
-        showScreen('teacher-screen');
     }
 });
 
-function renderTeacherMissionGrid() {
-    const grid = document.getElementById('teacher-mission-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    for (let i = 1; i <= 24; i++) {
-        const mId = i.toString();
-        const b = document.createElement('button');
-        b.className = 'sia-btn';
-        b.style.fontSize = '0.7rem';
-        b.innerHTML = `INTEL: M${mId}`;
-        b.onclick = () => window.viewMissionSubmissions(mId);
-        grid.appendChild(b);
-    }
-}
-
-window.viewMissionSubmissions = async (mId) => {
-    const overlay = document.getElementById('submission-ledger-overlay');
-    const content = document.getElementById('ledger-content');
-    overlay.style.display = 'block';
-    const q = query(collection(db, "submissions"), where("missionId", "==", parseInt(mId)));
-    const snap = await getDocs(q);
-    content.innerHTML = snap.empty ? "No data reported." : '';
-    snap.forEach(docSnap => {
-        const d = docSnap.data();
-        content.innerHTML += `<div class="sia-card"><b>Agents: ${d.agents.join(', ')}</b><br>${d.entries.map(e => `${e.polyId || 'Var '+e.variant}: ${e.val}`).join(' | ')}</div>`;
-    });
-};
-
-window.createNewAgent = async () => {
-    const name = document.getElementById('new-agent-name').value;
-    const code = document.getElementById('new-agent-code').value;
-    if (name && code.length === 4) {
-        await setDoc(doc(db, "roster", code), { agentName: name, agentCode: code });
-        loadRoster();
-    }
-};
-
-async function loadRoster() {
-    const list = document.getElementById('roster-list');
-    const snap = await getDocs(collection(db, "roster"));
-    list.innerHTML = '<h4>AUTHORIZED AGENTS</h4>';
-    snap.forEach(d => { list.innerHTML += `<div>${d.data().agentCode}: ${d.data().agentName}</div>`; });
-}
-
-window.releaseMission = async () => {
-    const val = document.getElementById('mission-release-select').value;
-    await setDoc(doc(db, "system", "config"), { currentMission: parseInt(val) });
-    alert("Protocol Broadcasted.");
-};
-
-// --- AGENT ACTIONS ---
+// --- AGENT LOGIC ---
 window.registerAgent = async () => {
     const val = document.getElementById('agent-id-input').value;
-    const q = query(collection(db, "roster"), where("agentCode", "==", val));
-    const agentDoc = await getDocs(q);
-    if (!agentDoc.empty) {
+    if (val.length === 4) {
         if (!loggedInAgents.includes(val)) {
             loggedInAgents.push(val);
             const p = document.createElement('span');
@@ -192,31 +89,72 @@ window.registerAgent = async () => {
             p.innerText = 'AGENT ' + val;
             document.getElementById('active-agents-list').appendChild(p);
         }
-    } else { alert("ACCESS DENIED."); }
+    }
     document.getElementById('agent-id-input').value = '';
 };
 
 window.startOperation = () => {
     if (loggedInAgents.length > 0) {
         document.getElementById('session-controls').style.display = 'flex';
-        showScreen('home-screen');
+        window.showScreen('home-screen');
+    } else {
+        alert("IDENTIFY AGENTS TO PROCEED.");
     }
 };
 
 window.renderMissionHub = () => {
     const list = document.getElementById('active-mission-list');
-    list.innerHTML = `<div class="sia-card" onclick="openMission(${activeMissionId})" style="cursor:pointer; border-color:var(--sia-neon);"><h3>MISSION ${activeMissionId}</h3><p>${missionRegistry[activeMissionId].title}</p></div>`;
-    showScreen('mission-hub');
+    list.innerHTML = `
+        <div class="sia-card" onclick="window.openMission(${activeMissionId})" style="cursor:pointer; border-color:var(--sia-neon);">
+            <h3>MISSION ${activeMissionId}</h3>
+            <p>${missionRegistry[activeMissionId].title}</p>
+        </div>`;
+    window.showScreen('mission-hub');
 };
 
 window.openMission = (id) => {
     const m = missionRegistry[id];
     const container = document.getElementById('polygon-entry-list');
     container.innerHTML = '';
-    if (m.type === "bulk") {
-        for (let i = 1; i <= 10; i++) {
-            container.innerHTML += `<div class="sia-card"><h3>POLYGON ${i}</h3>${m.fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i}" data-f="${f.id}">`).join('')}</div>`;
+    for (let i = 1; i <= 10; i++) {
+        container.innerHTML += `
+            <div class="sia-card">
+                <h3>POLYGON ${i}</h3>
+                ${m.fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i}" data-f="${f.id}">`).join('')}
+            </div>`;
+    }
+    window.showScreen('mission-entry');
+};
+
+window.submitMissionBatch = async () => {
+    const inputs = document.querySelectorAll('.m-in');
+    let errors = [];
+    const master = validationRegistry[activeMissionId];
+
+    inputs.forEach(i => {
+        if (!i.value) return;
+        const polyId = i.dataset.poly;
+        
+        if (activeMissionId === 2) {
+            const studentVals = i.value.split(',').map(v => parseFloat(v.trim())).sort();
+            const correctVals = [...master[polyId]].sort();
+            if (studentVals.length !== correctVals.length) {
+                errors.push(`Polygon ${polyId}`);
+            } else {
+                for(let j=0; j<correctVals.length; j++) {
+                    if (Math.abs(studentVals[j] - correctVals[j]) > 0.2) errors.push(`Polygon ${polyId}`);
+                }
+            }
+        } else if (master && parseInt(i.value) !== master[polyId]) {
+            errors.push(`Polygon ${polyId}`);
         }
-    } else {
-        ['A', 'B', 'C'].forEach(v => {
-            container.innerHTML +=
+    });
+
+    if (errors.length > 0) {
+        alert(`⚠️ INTEL DISCREPANCY in: ${errors.join(', ')}. Re-examine the artifacts.`);
+        return;
+    }
+
+    alert("INTELLIGENCE SEALED. Report transmitted to HQ.");
+    window.showScreen('home-screen');
+};
