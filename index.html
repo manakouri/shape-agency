@@ -62,25 +62,32 @@
             <button class="sia-btn submit-btn" onclick="window.submitMissionBatch()">FILE REPORT</button>
         </section>
 
-        <section id="teacher-screen" class="screen">
-            <div class="console-header">
-                <h2>COMMANDER CONSOLE</h2>
-                <button class="sia-btn logout-btn" onclick="window.staffLogout()">LOGOUT</button>
+       <section id="teacher-screen" class="screen">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>COMMANDER CONSOLE</h2>
+        <button class="sia-btn logout-btn" onclick="window.staffLogout()" style="width:auto; border-color:red; color:red;">LOGOUT</button>
+    </div>
+
+    <div class="sia-card">
+        <h3>MISSION CONTROL</h3>
+        <label>CURRENT ACTIVE PROTOCOL</label>
+        <select id="mission-release-select" class="sia-input"></select>
+        <button class="sia-btn" onclick="window.releaseMission()">BROADCAST TO FIELD</button>
+    </div>
+
+    <div class="sia-card">
+        <h3>FIELD RECRUITMENT</h3>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="new-agent-name" class="sia-input" placeholder="STUDENT NAME">
+            <input type="number" id="new-agent-code" class="sia-input" placeholder="4-DIGIT CODE">
+        </div>
+        <button class="sia-btn action-btn" onclick="window.authoriseAgent()">AUTHORISE AGENT</button>
+        
+        <label style="margin-top:20px; display:block;">AUTHORISED AGENT ROSTER</label>
+        <div id="roster-list" style="max-height: 200px; overflow-y: auto; background: #000; padding: 10px; border: 1px solid var(--sia-border);">
             </div>
-            <div class="sia-card">
-                <h3>MISSION CONTROL</h3>
-                <label>RELEASE MISSION TO AGENTS</label>
-                <select id="mission-release-select" class="sia-input"></select>
-                <button class="sia-btn" onclick="window.releaseMission()">BROADCAST PROTOCOL</button>
-            </div>
-            <div class="sia-card">
-    <h3>FIELD RECRUITMENT</h3>
-    <label>CREATE NEW AGENT ID</label>
-    <div id="teacher-agents-list" style="margin-bottom:10px;"></div>
-    <input type="number" id="teacher-agent-id-input" class="sia-input" placeholder="ENTER 4-DIGIT CODE">
-    <button type="button" class="sia-btn" onclick="window.registerAgent()">AUTHORISE AGENT</button>
-</div>
-        </section>
+    </div>
+</section>
     </main>
 
     <script type="module" src="index.js"></script>
