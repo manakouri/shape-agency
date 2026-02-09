@@ -4,45 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIA | Strategic Intelligence Archive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
+
     <header>
         <div class="logo-area" onclick="window.showScreen('login-screen')" style="cursor:pointer;">
             <span class="logo-text">SIA</span>
         </div>
         <div id="session-controls" style="display:none;">
-            <button class="sia-btn" style="width:auto; padding:5px 15px; font-size:0.7rem;" onclick="window.showScreen('home-screen')">HOME</button>
+            <button class="sia-btn nav-btn" onclick="window.showScreen('home-screen')">HOME</button>
         </div>
     </header>
 
     <main>
         <section id="login-screen" class="screen active">
-            <h2 style="color: var(--sia-neon);">TERMINAL ACCESS</h2>
+            <div class="terminal-header">
+                <h2>TERMINAL ACCESS</h2>
+                <p>ENCRYPTION LEVEL 1 ACTIVE</p>
+            </div>
+
             <div class="sia-card">
                 <label>STAFF GATEWAY</label>
-                <button type="button" class="sia-btn" onclick="window.teacherLogin()" style="border-color: #fff; color: #fff;">
-                    TEACHER LOGIN
-                </button>
+                <button type="button" class="sia-btn secondary" onclick="window.teacherLogin()">COMMANDER LOGIN</button>
             </div>
+
             <div class="sia-card">
                 <label>AGENT REGISTRATION</label>
-                <div id="active-agents-list" style="margin-bottom:10px;"></div>
-                <input type="number" id="agent-id-input" class="sia-input" placeholder="4-DIGIT AGENT CODE">
+                <div id="active-agents-list"></div>
+                <input type="number" id="agent-id-input" class="sia-input" placeholder="ENTER 4-DIGIT CODE">
                 <button type="button" class="sia-btn" onclick="window.registerAgent()">IDENTIFY AGENT</button>
-                <button type="button" class="sia-btn" onclick="window.startOperation()" style="border-color:var(--sia-blue); color:var(--sia-blue);">BEGIN OPERATION</button>
+                <button type="button" class="sia-btn action-btn" onclick="window.startOperation()">BEGIN OPERATION</button>
             </div>
         </section>
 
         <section id="home-screen" class="screen">
-            <div class="sia-card" onclick="window.renderMissionHub()" style="cursor:pointer;">
+            <h2>WELCOME, AGENTS</h2>
+            <div class="sia-card linked" onclick="window.renderMissionHub()">
                 <h3>ACTIVE MISSIONS</h3>
-                <p>Access current field objectives.</p>
+                <p>Current field objectives from HQ.</p>
             </div>
-            <div class="sia-card" onclick="window.showScreen('archive-screen')" style="cursor:pointer;">
+            <div class="sia-card disabled">
                 <h3>POLYGON ARCHIVE</h3>
-                <p>View decrypted data on known artifacts.</p>
+                <p>Access restricted to Level 2 Agents.</p>
             </div>
         </section>
 
@@ -52,22 +57,22 @@
         </section>
 
         <section id="mission-entry" class="screen">
-            <h2 id="mission-title">DATA ENTRY</h2>
+            <h2 id="mission-title-display">DATA ENTRY</h2>
             <div id="polygon-entry-list"></div>
-            <button class="sia-btn" onclick="window.submitMissionBatch()" style="margin-top:20px; border-color:var(--sia-neon);">FILE REPORT</button>
+            <button class="sia-btn submit-btn" onclick="window.submitMissionBatch()">FILE REPORT</button>
         </section>
 
         <section id="teacher-screen" class="screen">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="console-header">
                 <h2>COMMANDER CONSOLE</h2>
-                <button class="sia-btn" onclick="window.staffLogout()" style="width:auto; padding:5px 15px; border-color:red; color:red;">LOGOUT STAFF</button>
+                <button class="sia-btn logout-btn" onclick="window.staffLogout()">LOGOUT</button>
             </div>
             <div class="sia-card">
-                <h3>MISSION RELEASE</h3>
+                <h3>MISSION CONTROL</h3>
+                <label>RELEASE MISSION TO AGENTS</label>
                 <select id="mission-release-select" class="sia-input"></select>
                 <button class="sia-btn" onclick="window.releaseMission()">BROADCAST PROTOCOL</button>
             </div>
-            <div id="teacher-mission-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
         </section>
     </main>
 
