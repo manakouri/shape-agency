@@ -17,30 +17,65 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 // --- DATA REGISTRY (VERIFIED MISSIONS 1-10) ---
+// --- MASTER VALIDATION REGISTRY (VERIFIED AGAINST S.I.A DATA) ---
 const validationRegistry = {
     "1": { "1": 3, "2": 4, "3": 4, "4": 5, "5": 6, "6": 6, "7": 7, "8": 10, "9": 10, "10": 12 },
-    "2": {
-        "1": [6, 6, 6], "2": [6, 4.2, 6.4, 2.4], "3": [6, 3.5, 6, 3.5], 
-        "4": [4.8, 3.1, 3.6, 3.6, 4.3], "5": [3.6, 3.6, 3.6, 3.6, 3.6, 3.6],
-        "6": [6, 1.8, 3, 3, 3, 4.8], "7": [3.6, 3.1, 3.1, 3, 2.6, 3, 2],
-        "8": [2.2, 2.2, 1.9, 2.6, 2.8, 2.8, 2.6, 1.9, 2.2, 2.2],
-        "9": [2.5, 3.1, 2.2, 3.1, 2.6, 1.9, 1.9, 2.6, 2.8, 1.3],
-        "10": [3.7, 3.7, 2.7, 3.1, 1.7, 2.5, 2.5, 1.7, 3.1, 2.1, 1.3, 0.7]
+    "2": { // Mission 2: Side Lengths (Accepts comma separated values)
+        "1": [6, 6, 6],
+        "2": [6, 4.2, 6.4, 2.4],
+        "3": [6, 3.5, 6, 3.5],
+        "4": [4.8, 3.1, 3.6, 3.6, 4.3],
+        "5": [3.6, 3.6, 3.6, 3.6, 3.6, 3.6],
+        "6": [6, 1.8, 3, 3, 3, 4.8],
+        "7": [2.4, 2.4, 2.4, 2.4, 3.5, 3.5, 3.5],
+        "8": [3.5, 3.5, 4.9],
+        "9": [1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9],
+        "10": [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5]
     },
     "3": { "1": 0, "2": 1, "3": 2, "4": 0, "5": 3, "6": 2, "7": 0, "8": 0, "9": 0, "10": 1 },
     "4": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
     "5": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
     "6": { "1": 3, "2": 1, "3": 2, "4": 0, "5": 0, "6": 0, "7": 1, "8": 5, "9": 2, "10": 6 },
-    "10": { "1": 3, "2": 0, "3": 0, "4": 0, "5": 6, "6": 0, "7": 0, "8": 1, "9": 0, "10": 0 }
+    "9": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 1, "7": 0, "8": 5, "9": 0, "10": 2 },
+    "10": { "1": 3, "2": 0, "3": 0, "4": 0, "5": 6, "6": 0, "7": 0, "8": 1, "9": 0, "10": 0 },
+    // Deep Dives (Min Vertices)
+    "11":3, "12":3, "13":3, "14":4, "15":4, "16":4, "18":5, "19":6, "20":7, "21":9, "22":10, "23":11, "24":12
 };
 
 const missionRegistry = {
-    "1": { title: "Mission 01: Vertex Scan", fields: [{id:"v", label:"Vertices"}] },
-    "2": { title: "Mission 02: Side Lengths", fields: [{id:"len", label:"Length (cm) - separate with commas"}] },
-    "3": { title: "Mission 03: Parallel Pairs", fields: [{id:"para", label:"Parallel Pairs"}] },
-    "4": { title: "Mission 04: Right Angles", fields: [{id:"right", label:"Right Angles"}] },
-    "10": { title: "Mission 10: Symmetry", fields: [{id:"symm", label:"Symmetry Lines"}] }
+    "1": { title: "Counting Vertices", type: "bulk", fields: [{id:"v", label:"Vertices", type:"number"}] },
+    "2": { title: "Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm) - separate with commas", type:"text"}] },
+    "3": { title: "Parallel Pairs", type: "bulk", fields: [{id:"para", label:"Parallel Pairs", type:"number"}] },
+    "4": { title: "Right Angles", type: "bulk", fields: [{id:"right", label:"Right Angles", type:"number"}] },
+    "5": { title: "Perpendicular Lines", type: "bulk", fields: [{id:"perp", label:"Perp. Pairs", type:"number"}] },
+    "6": { title: "Acute Angles", type: "bulk", fields: [{id:"acute", label:"Acute Angles", type:"number"}] },
+    "7": { title: "Naming Angles (0-180°)", type: "bulk", fields: [{id:"est", label:"Estimate", type:"number"}] },
+    "8": { title: "Exact Measurements", type: "bulk", fields: [{id:"exact", label:"Degrees (°)", type:"number"}] },
+    "9": { title: "Reflex Angles", type: "bulk", fields: [{id:"reflex", label:"Reflex Angles", type:"number"}] },
+    "10": { title: "Lines of Symmetry", type: "bulk", fields: [{id:"symm", label:"Symmetry Lines", type:"number"}] },
+    "11": { title: "Equilateral Triangles", type: "deep", target: "Triangle" },
+    "12": { title: "Isosceles Triangles", type: "deep", target: "Triangle" },
+    "13": { title: "Scalene Triangles", type: "deep", target: "Triangle" },
+    "14": { title: "Rectangles", type: "deep", target: "Quadrilateral" },
+    "15": { title: "Squares", type: "deep", target: "Quadrilateral" },
+    "16": { title: "Rhombus", type: "deep", target: "Quadrilateral" },
+    "17": { title: "Regularity Standard", type: "deep", target: "Polygon" },
+    "18": { title: "Pentagon", type: "deep", target: "Pentagon" },
+    "19": { title: "Hexagon", type: "deep", target: "Hexagon" },
+    "20": { title: "Septagon", type: "deep", target: "Septagon" },
+    "21": { title: "Nonagon", type: "deep", target: "Nonagon" },
+    "22": { title: "Decagon", type: "deep", target: "Decagon" },
+    "23": { title: "Hendecagon", type: "deep", target: "Hendecagon" },
+    "24": { title: "Dodecagon", type: "deep", target: "Dodecagon" }
 };
+
+const deepFields = [
+    {id:"v", label:"Vertices", type:"number"},
+    {id:"ang", label:"Angle Data", type:"text"},
+    {id:"par", label:"Parallel Pairs", type:"number"},
+    {id:"per", label:"Perp. Pairs", type:"number"},
+    {id:"sym", label:"Symmetry Lines", type:"number"}
+];
 
 let loggedInAgents = [];
 let activeMissionId = 1;
