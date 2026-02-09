@@ -85,13 +85,14 @@
         <button class="sia-btn logout-btn" onclick="window.staffLogout()" style="width:auto; border-color:red; color:red;">LOGOUT</button>
     </div>
 
-    <div class="sia-card">
-        <h3>MISSION CONTROL</h3>
-        <label>CURRENT ACTIVE PROTOCOL</label>
-        <select id="mission-release-select" class="sia-input"></select>
-        <button class="sia-btn" onclick="window.releaseMission()">BROADCAST TO FIELD</button>
-    </div>
-
+   <div class="sia-card">
+    <h3>MISSION PROTOCOL MANAGER</h3>
+    <p>Select missions to broadcast to the field:</p>
+    <div id="mission-toggle-list" style="max-height: 250px; overflow-y: auto; background: #000; padding: 10px; border: 1px solid var(--sia-border); display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+        </div>
+    <button class="sia-btn action-btn" style="margin-top:15px;" onclick="window.broadcastMissions()">UPDATE FIELD TERMINALS</button>
+</div>
+           
     <div class="sia-card">
         <h3>FIELD RECRUITMENT</h3>
         <div style="display:flex; gap:10px;">
