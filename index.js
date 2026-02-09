@@ -70,7 +70,8 @@ const deepFields = [
 ];
 
 let loggedInAgents = [];
-let activeMissionId = 1;
+let broadcastedMissionIds = []; // Now stores a list of missions
+let activeMissionId = 0; // Currently selected mission for data entry
 
 // --- DATABASE & AUTH ---
 window.authoriseAgent = async () => {
@@ -209,18 +210,66 @@ window.showScreen = (id) => {
 window.agentLogout = () => { if(confirm("ABANDON MISSION?")) { loggedInAgents = []; document.getElementById('active-agents-list').innerHTML = ''; document.getElementById('session-controls').style.display = 'none'; window.showScreen('login-screen'); }};
 window.teacherLogin = () => signInWithPopup(auth, provider);
 window.staffLogout = () => auth.signOut().then(() => location.reload());
-window.releaseMission = () => { activeMissionId = parseInt(document.getElementById('mission-release-select').value); alert("HQ: Mission Updated."); };
-window.renderMissionHub = () => {
-    document.getElementById('active-mission-list').innerHTML = `<div class="sia-card linked" onclick="window.openMission(${activeMissionId})"><h3>MISSION ${activeMissionId}</h3><p>${missionRegistry[activeMissionId].title}</p></div>`;
-    window.showScreen('mission-hub');
-};
+
 window.startOperation = () => loggedInAgents.length > 0 ? (document.getElementById('session-controls').style.display='flex', window.showScreen('home-screen')) : alert("IDENTIFY AGENTS");
 
+// --- UPDATED MISSION MANAGEMENT ---
+
+// 1. Populate the Toggle List in the Teacher Console
+const renderMissionToggles = () => {
+    const list = document.getElementById('mission-toggle-list');
+    if (!list) return;
+    list.innerHTML = Object.keys(missionRegistry).map(k => `
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; cursor: pointer; color: white; margin-bottom: 5px;">
+            <input type="checkbox" class="mission-chk" value="${k}" ${broadcastedMissionIds.includes(parseInt(k)) ? 'checked' : ''}>
+            ${missionRegistry[k].title}
+        </label>
+    `).join('');
+};
+
+// 2. Broadcast selected missions (Teacher Side)
+window.broadcastMissions = () => {
+    const checkboxes = document.querySelectorAll('.mission-chk');
+    broadcastedMissionIds = Array.from(checkboxes)
+        .filter(chk => chk.checked)
+        .map(chk => parseInt(chk.value));
+    
+    alert(broadcastedMissionIds.length === 0 ? 
+        "HQ: All missions recalled." : 
+        `HQ: ${broadcastedMissionIds.length} Protocols Broadcasted.`);
+};
+
+// 3. Render the Student Mission Hub (Student Side)
+window.renderMissionHub = () => {
+    const list = document.getElementById('active-mission-list');
+    list.innerHTML = '';
+
+    if (broadcastedMissionIds.length === 0) {
+        list.innerHTML = `
+            <div class="sia-card" style="border-color: red; text-align: center;">
+                <h3 style="color: red;">NO ACTIVE MISSIONS</h3>
+                <p>Awaiting authorization from SIA Command.</p>
+            </div>`;
+    } else {
+        // Show a card for every mission you've checked in the teacher console
+        broadcastedMissionIds.forEach(id => {
+            const m = missionRegistry[id];
+            list.innerHTML += `
+                <div class="sia-card linked" onclick="window.openMission(${id})" style="margin-bottom: 10px;">
+                    <h3>MISSION ${id}</h3>
+                    <p>${m.title}</p>
+                    <p style="color: var(--sia-neon); font-size: 0.8rem;">PROTOCOL ACTIVE</p>
+                </div>`;
+        });
+    }
+    window.showScreen('mission-hub');
+};
+
+// 4. Update the Auth Observer to trigger the toggle list
 onAuthStateChanged(auth, (user) => {
     if (user) {
         window.showScreen('teacher-screen');
         listenToRoster();
-        const sel = document.getElementById('mission-release-select');
-        if (sel) sel.innerHTML = Object.keys(missionRegistry).map(k => `<option value="${k}">${missionRegistry[k].title}</option>`).join('');
+        renderMissionToggles(); // This builds the checklist as soon as you log in
     }
 });
