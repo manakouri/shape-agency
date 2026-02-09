@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, where, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -16,16 +16,15 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// --- MASTER VALIDATION REGISTRY ---
+// --- VERIFIED S.I.A. DATASET (Missions 1-10) ---
 const validationRegistry = {
     "1": { "1": 3, "2": 4, "3": 4, "4": 5, "5": 6, "6": 6, "7": 7, "8": 10, "9": 10, "10": 12 },
     "2": { 
         "1": [6, 6, 6], "2": [6, 4.2, 6.4, 2.4], "3": [6, 3.5, 6, 3.5], 
         "4": [4.8, 3.1, 3.6, 3.6, 4.3], "5": [3.6, 3.6, 3.6, 3.6, 3.6, 3.6],
-        "6": [6, 1.8, 3, 3, 3, 4.8], "7": [3.6, 3.1, 3.1, 3, 2.6, 3, 2],
-        "8": [2.2, 2.2, 1.9, 2.6, 2.8, 2.8, 2.6, 1.9, 2.2, 2.2],
-        "9": [2.5, 3.1, 2.2, 3.1, 2.6, 1.9, 1.9, 2.6, 2.8, 1.3],
-        "10": [3.7, 3.7, 2.7, 3.1, 1.7, 2.5, 2.5, 1.7, 3.1, 2.1, 1.3, 0.7]
+        "6": [6, 1.8, 3, 3, 3, 4.8], "7": [2.4, 2.4, 2.4, 2.4, 3.5, 3.5, 3.5],
+        "8": [3.5, 3.5, 4.9], "9": [1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9, 1.9],
+        "10": [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5]
     },
     "3": { "1": 0, "2": 1, "3": 2, "4": 0, "5": 3, "6": 2, "7": 0, "8": 0, "9": 0, "10": 1 },
     "4": { "1": 0, "2": 2, "3": 0, "4": 0, "5": 0, "6": 5, "7": 0, "8": 0, "9": 0, "10": 0 },
@@ -38,12 +37,12 @@ const validationRegistry = {
 
 const missionRegistry = {
     "1": { title: "M01: Vertex Scan", type: "bulk", fields: [{id:"v", label:"Vertices"}] },
-    "2": { title: "M02: Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm)"}] },
+    "2": { title: "M02: Side Lengths", type: "bulk", fields: [{id:"len", label:"Length (cm) - separate with commas"}] },
     "3": { title: "M03: Parallel Pairs", type: "bulk", fields: [{id:"para", label:"Parallel Pairs"}] },
     "4": { title: "M04: Right Angles", type: "bulk", fields: [{id:"right", label:"Right Angles"}] },
     "5": { title: "M05: Perpendicular Lines", type: "bulk", fields: [{id:"perp", label:"Perp. Pairs"}] },
     "6": { title: "M06: Acute Angles", type: "bulk", fields: [{id:"acute", label:"Acute Angles"}] },
-    "7": { title: "M07: Angle Naming", type: "bulk", fields: [{id:"name", label:"Type (Acute/Obtuse/etc)"}] },
+    "7": { title: "M07: Angle Naming", type: "bulk", fields: [{id:"name", label:"Type (Acute/Obtuse/Reflex)"}] },
     "8": { title: "M08: Exact Angles", type: "bulk", fields: [{id:"deg", label:"Degrees (°)"}] },
     "9": { title: "M09: Reflex Angles", type: "bulk", fields: [{id:"reflex", label:"Reflex Angles"}] },
     "10": { title: "M10: Symmetry", type: "bulk", fields: [{id:"symm", label:"Symmetry Lines"}] },
@@ -107,54 +106,26 @@ window.registerAgent = async () => {
             if (!loggedInAgents.includes(code)) {
                 loggedInAgents.push(code);
                 document.getElementById('active-agents-list').innerHTML += `<span class="agent-pill">AGENT ${data.agentName}</span> `;
+                document.getElementById('welcome-msg').innerText = `WELCOME, AGENT ${data.agentName}`;
             }
         } else { alert("ACCESS DENIED: Code Unknown."); }
     }
     document.getElementById('agent-id-input').value = '';
 };
 
-window.agentLogout = () => {
-    if (confirm("SIA COMMAND: Are you sure you want to end this session? All unsaved data will be lost.")) {
-        // Clear the local session data
-        loggedInAgents = [];
-        
-        // Reset the UI elements
-        document.getElementById('active-agents-list').innerHTML = '';
-        document.getElementById('session-controls').style.display = 'none';
-        
-        // Return to the main entry terminal
-        window.showScreen('login-screen');
-        
-        console.log("Session Terminated. Agent identities cleared.");
-    }
-};
-
-// --- MISSION LOGIC ---
-// --- DATA SYNC SYSTEM ---
-
-// Generate a unique key for this group of agents and this mission
-const getSessionKey = () => {
-    const sortedCodes = [...loggedInAgents].sort().join("-");
-    return `M${activeMissionId}-G-${sortedCodes}`;
-};
+// --- MISSION & ARCHIVE LOGIC ---
+const getSessionKey = () => `M${activeMissionId}-G-${[...loggedInAgents].sort().join("-")}`;
 
 window.openMission = async (id) => {
     activeMissionId = id;
     const m = missionRegistry[id];
     const container = document.getElementById('polygon-entry-list');
-    container.innerHTML = '<p style="text-align:center; color:var(--sia-neon);">DECRYPTING ARCHIVE...</p>';
+    container.innerHTML = '<p style="text-align:center;">DECRYPTING...</p>';
 
-    // 1. Fetch existing data from Firebase
     const sessionKey = getSessionKey();
-    const docRef = doc(db, "mission_reports", sessionKey);
-    const docSnap = await getDocs(query(collection(db, "mission_reports"), where("sessionKey", "==", sessionKey)));
-    
-    let existingData = {};
-    if (!docSnap.empty) {
-        existingData = docSnap.docs[0].data().values || {};
-    }
+    const snap = await getDocs(query(collection(db, "mission_reports"), where("sessionKey", "==", sessionKey)));
+    let existingData = !snap.empty ? snap.docs[0].data().values : {};
 
-    // 2. Build the UI
     container.innerHTML = '';
     const isBulk = m.type === "bulk";
     const count = isBulk ? 10 : 3;
@@ -164,16 +135,8 @@ window.openMission = async (id) => {
         container.innerHTML += `
             <div class="sia-card">
                 <h3>${isBulk ? 'POLYGON' : m.target} ${i}</h3>
-                ${fields.map(f => {
-                    const val = existingData[`p${i}-${f.id}`] || '';
-                    return `
-                        <label>${f.label}</label>
-                        <input class="sia-input m-in" 
-                               data-poly="${i}" 
-                               data-f="${f.id}" 
-                               value="${val}" 
-                               placeholder="Entry Pending...">`;
-                }).join('')}
+                ${fields.map(f => `<label>${f.label}</label><input class="sia-input m-in" data-poly="${i}" data-f="${f.id}" value="${existingData[`p${i}-${f.id}`] || ''}">`).join('')}
+                ${!isBulk ? `<label>Field Notes</label><textarea class="sia-input">${existingData[`p${i}-notes`] || ''}</textarea>` : ''}
             </div>`;
     }
     window.showScreen('mission-entry');
@@ -185,123 +148,68 @@ window.submitMissionBatch = async () => {
     let errors = [];
     const master = validationRegistry[activeMissionId];
 
-    // Collect data and validate
     inputs.forEach(i => {
         const val = i.value.trim();
-        const polyId = i.dataset.poly;
-        const fieldId = i.dataset.f;
         if (!val) return;
+        missionData[`p${i.dataset.poly}-${i.dataset.f}`] = val;
 
-        missionData[`p${polyId}-${fieldId}`] = val;
-
-        // Validation Logic
         if (activeMissionId === 2) {
             const student = val.split(',').map(v => parseFloat(v.trim())).sort();
-            const correct = [...master[polyId]].sort();
-            if (student.length !== correct.length || student.some((v, idx) => Math.abs(v - correct[idx]) > 0.2)) {
-                errors.push(`P${polyId}`);
-            }
+            const correct = [...master[i.dataset.poly]].sort();
+            if (student.length !== correct.length || student.some((v, idx) => Math.abs(v - correct[idx]) > 0.2)) errors.push(`P${i.dataset.poly}`);
         } else if (missionRegistry[activeMissionId].type === "bulk") {
-            if (master && parseInt(val) !== master[polyId]) errors.push(`P${polyId}`);
+            if (master && parseInt(val) !== master[i.dataset.poly]) errors.push(`P${i.dataset.poly}`);
         }
     });
 
-    if (errors.length > 0) {
-        alert(`⚠️ DISCREPANCY DETECTED: Review data for ${[...new Set(errors)].join(', ')}`);
-        return;
-    }
+    if (errors.length > 0) return alert(`SATELLITE WARNING: Review ${[...new Set(errors)].join(', ')}`);
 
-    // Save to Firebase
-    const sessionKey = getSessionKey();
-    try {
-        await setDoc(doc(db, "mission_reports", sessionKey), {
-            sessionKey: sessionKey,
-            missionId: activeMissionId,
-            agents: loggedInAgents,
-            values: missionData,
-            lastUpdated: new Date()
-        });
-        alert("INTELLIGENCE UPLOADED: Archive updated.");
-        window.showScreen('home-screen');
-    } catch (e) {
-        console.error("Upload Error:", e);
-        alert("UPLOAD FAILED: Check Satellite Link (Firebase Rules).");
-    }
+    await setDoc(doc(db, "mission_reports", getSessionKey()), {
+        sessionKey: getSessionKey(), missionId: activeMissionId, agents: loggedInAgents, values: missionData, lastUpdated: new Date()
+    });
+    alert("INTELLIGENCE SEALED.");
+    window.showScreen('home-screen');
 };
 
 window.openArchiveMenu = () => {
     const grid = document.getElementById('polygon-grid');
-    grid.innerHTML = '';
-    for (let i = 1; i <= 10; i++) {
-        grid.innerHTML += `
-            <button class="sia-btn" onclick="window.viewPolygonDetail(${i})">
-                POLYGON ${i}
-            </button>`;
-    }
+    grid.innerHTML = Array.from({length: 10}, (_, i) => `<button class="sia-btn" onclick="window.viewPolygonDetail(${i+1})">POLYGON ${i+1}</button>`).join('');
     window.showScreen('archive-menu');
 };
 
 window.viewPolygonDetail = async (polyId) => {
     const content = document.getElementById('detail-content');
-    const title = document.getElementById('detail-title');
-    title.innerText = `POLYGON ${polyId} DOSSIER`;
-    content.innerHTML = '<p style="color:var(--sia-neon);">QUERYING ARCHIVE...</p>';
-    
+    document.getElementById('detail-title').innerText = `POLYGON ${polyId} DOSSIER`;
+    content.innerHTML = '<p>QUERYING...</p>';
     window.showScreen('polygon-detail');
 
-    const sessionKeyPrefix = `G-${[...loggedInAgents].sort().join("-")}`;
-    
-    try {
-        // Fetch all reports for this group of agents
-        const q = query(collection(db, "mission_reports"), where("agents", "array-contains-any", loggedInAgents));
-        const querySnapshot = await getDocs(q);
-        
-        let archiveHtml = `<div class="sia-card" style="border-color:var(--sia-blue)">`;
-        let foundAnyData = false;
+    const q = query(collection(db, "mission_reports"), where("agents", "array-contains-any", loggedInAgents));
+    const snap = await getDocs(q);
+    let html = `<div class="sia-card">`;
+    let found = false;
 
-        querySnapshot.forEach((doc) => {
-            const report = doc.data();
-            const mission = missionRegistry[report.missionId];
-            
-            // Look for fields matching this polygon ID
-            const fields = (mission.type === "bulk") ? mission.fields : deepFields;
-            
-            fields.forEach(f => {
-                const val = report.values[`p${polyId}-${f.id}`];
-                if (val) {
-                    foundAnyData = true;
-                    archiveHtml += `
-                        <div style="margin-bottom:15px; border-bottom:1px solid #222; padding-bottom:5px;">
-                            <label style="color:var(--sia-blue)">${mission.title}</label>
-                            <p style="margin:5px 0; font-size:1.1rem;">${f.label}: <span style="color:var(--sia-neon)">${val}</span></p>
-                        </div>`;
-                }
-            });
+    snap.forEach(doc => {
+        const report = doc.data();
+        const mission = missionRegistry[report.missionId];
+        const fields = (mission.type === "bulk") ? mission.fields : deepFields;
+        fields.forEach(f => {
+            const val = report.values[`p${polyId}-${f.id}`];
+            if (val) { found = true; html += `<p><strong>${mission.title}</strong>: ${val}</p>`; }
         });
+    });
 
-        if (!foundAnyData) {
-            archiveHtml += `<p>No intelligence gathered for this artifact yet. Complete missions to populate the archive.</p>`;
-        }
-
-        archiveHtml += `</div>`;
-        content.innerHTML = archiveHtml;
-
-    } catch (e) {
-        console.error("Archive Error:", e);
-        content.innerHTML = `<p style="color:red;">ENCRYPTION ERROR: Could not retrieve dossier.</p>`;
-    }
+    content.innerHTML = found ? html + `</div>` : `<p>No data recorded for this artifact.</p>`;
 };
-// --- NAVIGATION & UTILS ---
+
+// --- GLOBAL NAV & SESSION ---
 window.showScreen = (id) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
 };
+window.agentLogout = () => { if(confirm("ABANDON MISSION?")) { loggedInAgents = []; document.getElementById('active-agents-list').innerHTML = ''; document.getElementById('session-controls').style.display = 'none'; window.showScreen('login-screen'); }};
 window.teacherLogin = () => signInWithPopup(auth, provider);
 window.staffLogout = () => auth.signOut().then(() => location.reload());
-window.releaseMission = () => {
-    activeMissionId = parseInt(document.getElementById('mission-release-select').value);
-    alert(`HQ: Broadcast updated to ${missionRegistry[activeMissionId].title}`);
-};
+window.releaseMission = () => { activeMissionId = parseInt(document.getElementById('mission-release-select').value); alert("HQ: Mission Updated."); };
 window.renderMissionHub = () => {
     document.getElementById('active-mission-list').innerHTML = `<div class="sia-card linked" onclick="window.openMission(${activeMissionId})"><h3>MISSION ${activeMissionId}</h3><p>${missionRegistry[activeMissionId].title}</p></div>`;
     window.showScreen('mission-hub');
