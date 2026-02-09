@@ -212,6 +212,69 @@ window.submitMissionBatch = async () => {
         alert("UPLOAD FAILED: Check Satellite Link (Firebase Rules).");
     }
 };
+
+window.openArchiveMenu = () => {
+    const grid = document.getElementById('polygon-grid');
+    grid.innerHTML = '';
+    for (let i = 1; i <= 10; i++) {
+        grid.innerHTML += `
+            <button class="sia-btn" onclick="window.viewPolygonDetail(${i})">
+                POLYGON ${i}
+            </button>`;
+    }
+    window.showScreen('archive-menu');
+};
+
+window.viewPolygonDetail = async (polyId) => {
+    const content = document.getElementById('detail-content');
+    const title = document.getElementById('detail-title');
+    title.innerText = `POLYGON ${polyId} DOSSIER`;
+    content.innerHTML = '<p style="color:var(--sia-neon);">QUERYING ARCHIVE...</p>';
+    
+    window.showScreen('polygon-detail');
+
+    const sessionKeyPrefix = `G-${[...loggedInAgents].sort().join("-")}`;
+    
+    try {
+        // Fetch all reports for this group of agents
+        const q = query(collection(db, "mission_reports"), where("agents", "array-contains-any", loggedInAgents));
+        const querySnapshot = await getDocs(q);
+        
+        let archiveHtml = `<div class="sia-card" style="border-color:var(--sia-blue)">`;
+        let foundAnyData = false;
+
+        querySnapshot.forEach((doc) => {
+            const report = doc.data();
+            const mission = missionRegistry[report.missionId];
+            
+            // Look for fields matching this polygon ID
+            const fields = (mission.type === "bulk") ? mission.fields : deepFields;
+            
+            fields.forEach(f => {
+                const val = report.values[`p${polyId}-${f.id}`];
+                if (val) {
+                    foundAnyData = true;
+                    archiveHtml += `
+                        <div style="margin-bottom:15px; border-bottom:1px solid #222; padding-bottom:5px;">
+                            <label style="color:var(--sia-blue)">${mission.title}</label>
+                            <p style="margin:5px 0; font-size:1.1rem;">${f.label}: <span style="color:var(--sia-neon)">${val}</span></p>
+                        </div>`;
+                }
+            });
+        });
+
+        if (!foundAnyData) {
+            archiveHtml += `<p>No intelligence gathered for this artifact yet. Complete missions to populate the archive.</p>`;
+        }
+
+        archiveHtml += `</div>`;
+        content.innerHTML = archiveHtml;
+
+    } catch (e) {
+        console.error("Archive Error:", e);
+        content.innerHTML = `<p style="color:red;">ENCRYPTION ERROR: Could not retrieve dossier.</p>`;
+    }
+};
 // --- NAVIGATION & UTILS ---
 window.showScreen = (id) => {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
