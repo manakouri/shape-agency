@@ -167,3 +167,32 @@ label {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--sia-blue);
 }
+/* --- S.I.A. LOGO PULSE EFFECT --- */
+.logo-container {
+    width: 45px; 
+    height: 45px; 
+    border: 3px solid var(--sia-neon); 
+    position: relative; 
+    transform: rotate(45deg); 
+    margin-right: 20px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+    animation: logoPulse 2s infinite ease-in-out;
+}
+
+@keyframes logoPulse {
+    0% { 
+        box-shadow: 0 0 5px rgba(0, 255, 157, 0.2); 
+        border-color: rgba(0, 255, 157, 0.8);
+    }
+    50% { 
+        box-shadow: 0 0 20px rgba(0, 255, 157, 0.6); 
+        border-color: var(--sia-neon);
+    }
+    100% { 
+        box-shadow: 0 0 5px rgba(0, 255, 157, 0.2); 
+        border-color: rgba(0, 255, 157, 0.8);
+    }
+}
